@@ -1,0 +1,21 @@
+# AGENTS
+
+- Leer el blueprint oficial antes de trabajar.
+- Utilizar React.js y Vite en la implementación futura.
+- Mantener arquitectura por features.
+- Separar componentes presentacionales, contenedores, hooks y servicios.
+- Centralizar textos planos y constantes en `src/constants`.
+- Crear un archivo de constantes por feature.
+- No hardcodear textos visibles en componentes.
+- Extender los archivos existentes y no reemplazarlos.
+- Diseñar para responsive desde el inicio.
+- Incluir estados `loading`, `empty`, `error` y `success`.
+- Mantener accesibilidad básica.
+- No implementar funcionalidades fuera de fase.
+- Toda tarea parte desde `develop`.
+- Usar ramas `bryan/<tipo>/<nombre-corto>`.
+- Solicitar autorización explícita antes de cada fase.
+- Ejecutar tests y build antes de merges.
+- Documentar todos los cambios.
+- No instalar dependencias sin justificar su necesidad.
+- No almacenar secretos en el frontend.
