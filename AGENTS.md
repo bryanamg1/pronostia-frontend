@@ -1,21 +1,13 @@
 # AGENTS
 
-- Leer el blueprint oficial antes de trabajar.
-- Utilizar React.js y Vite en la implementación futura.
-- Mantener arquitectura por features.
-- Separar componentes presentacionales, contenedores, hooks y servicios.
-- Centralizar textos planos y constantes en `src/constants`.
-- Crear un archivo de constantes por feature.
-- No hardcodear textos visibles en componentes.
-- Extender los archivos existentes y no reemplazarlos.
-- Diseñar para responsive desde el inicio.
-- Incluir estados `loading`, `empty`, `error` y `success`.
-- Mantener accesibilidad básica.
-- No implementar funcionalidades fuera de fase.
-- Toda tarea parte desde `develop`.
-- Usar ramas `bryan/<tipo>/<nombre-corto>`.
-- Solicitar autorización explícita antes de cada fase.
-- Ejecutar tests y build antes de merges.
-- Documentar todos los cambios.
-- No instalar dependencias sin justificar su necesidad.
-- No almacenar secretos en el frontend.
+- Use React + Vite when frontend implementation is authorized.
+- Preserve feature-based architecture.
+- Keep visible texts centralized in `src/constants`.
+- Do not hardcode visible strings in components.
+- Separate presentational components from containers.
+- Every view must consider `loading`, `empty`, `error`, and `success` states.
+- Maintain responsive behavior and basic accessibility.
+- Start work from `develop` and use `bryan/<type>/<short-name>` branches.
+- Require explicit phase authorization before implementation or merge.
+- Run tests and build checks before merge when the project includes them.
+- Do not store secrets or private local operational information in the repository.
