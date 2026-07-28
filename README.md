@@ -1,22 +1,22 @@
 # PronostIA Frontend
 
-Interfaz planificada de PronostIA para visualizar fixtures, pronósticos, métricas y avisos de uso responsable.
+Interfaz planificada de PronostIA para visualizar fixtures, pronosticos, metricas y avisos de uso responsable.
 
 ## Estado
 
-`Fase Bootstrap / planificación`
+`Bootstrap completado / implementacion no iniciada`
 
-Todavía no existe implementación funcional del frontend. Este repositorio contiene únicamente la base documental y operativa inicial.
+Todavia no existe implementacion funcional del frontend. El repositorio conserva solo la base publica y las reglas minimas de gobierno del proyecto.
 
-## Propósito
+## Proposito
 
-La interfaz mostrará en fases posteriores:
+La interfaz mostrara en fases posteriores:
 
 - dashboard diario;
-- detalle de partidos y pronósticos;
-- métricas históricas;
+- detalle de partidos y pronosticos;
+- metricas historicas;
 - vistas administrativas acotadas;
-- estados de loading, vacío, error y éxito;
+- estados de loading, vacio, error y exito;
 - experiencia responsive.
 
 ## Stack previsto
@@ -26,7 +26,7 @@ La interfaz mostrará en fases posteriores:
 - React Router
 - Material UI
 - Arquitectura por features
-- Diseño responsive
+- Diseno responsive
 
 ## Repositorios de referencia
 
@@ -36,8 +36,8 @@ Blueprint oficial: https://github.com/bryanamg1/pronostia-backend/blob/main/blue
 
 ## Flujo Git
 
-- `main`: línea estable del repositorio.
+- `main`: linea estable del repositorio.
 - `develop`: base obligatoria para cada nueva tarea.
 - ramas de trabajo: `bryan/<tipo>/<nombre-corto>`.
 
-Cada fase requiere autorización explícita antes de iniciar cambios de implementación.
+Cada fase requiere autorizacion explicita antes de iniciar cambios de implementacion.

@@ -6,6 +6,8 @@ dist/
 coverage/
 *.log
 codex.local.instructions.txt
+.codex-local/
+local-docs/
 .DS_Store
 Thumbs.db
 .vscode/
