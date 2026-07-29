@@ -1,12 +1,13 @@
 import { screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render } from "@testing-library/react";
 
 import { AppRoutes } from "./AppRoutes.jsx";
 import { backendApi } from "../services/backendApi.js";
 import {
   competitionsDto,
+  fixtureDtos,
   latestRunDto,
   predictionDtos,
 } from "../test/fixtures/predictions.js";
@@ -14,6 +15,7 @@ import {
 vi.mock("../services/backendApi.js", () => ({
   backendApi: {
     getCompetitions: vi.fn(),
+    getTodayFixtures: vi.fn(),
     getLatestSystemRun: vi.fn(),
     getTodayPredictions: vi.fn(),
     getTopPredictions: vi.fn(),
@@ -25,6 +27,7 @@ describe("AppRoutes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     backendApi.getCompetitions.mockResolvedValue(competitionsDto);
+    backendApi.getTodayFixtures.mockResolvedValue(fixtureDtos);
     backendApi.getLatestSystemRun.mockResolvedValue(latestRunDto);
     backendApi.getTodayPredictions.mockResolvedValue([]);
     backendApi.getTopPredictions.mockResolvedValue([]);
@@ -50,14 +53,11 @@ describe("AppRoutes", () => {
       "page",
     );
     expect(
-      screen.queryByRole("link", { name: "Dashboard diario" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Dashboard diario" }),
-    ).not.toBeInTheDocument();
+      screen.getByRole("link", { name: "Ligas y competiciones" }),
+    ).toBeInTheDocument();
   });
 
-  it("keeps dashboard navigation useful outside the dashboard route", async () => {
+  it("keeps both navigation entries useful outside the dashboard route", async () => {
     render(
       <MemoryRouter initialEntries={["/predictions/17"]}>
         <AppRoutes />
@@ -68,6 +68,24 @@ describe("AppRoutes", () => {
     expect(
       screen.getByRole("link", { name: "Dashboard diario" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("link", { name: "Ligas y competiciones" }).length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("marks competitions navigation as active on competition routes", async () => {
+    render(
+      <MemoryRouter initialEntries={["/competitions"]}>
+        <AppRoutes />
+      </MemoryRouter>,
+    );
+
+    await screen.findAllByRole("heading", { name: "Ligas y competiciones" });
+    expect(
+      screen
+        .getAllByText("Ligas y competiciones")
+        .some((element) => element.getAttribute("aria-current") === "page"),
+    ).toBe(true);
   });
 
   it("renders a useful 404 state for unknown routes", async () => {

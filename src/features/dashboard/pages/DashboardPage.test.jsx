@@ -7,6 +7,7 @@ import { backendApi } from "../../../services/backendApi.js";
 import {
   competitionsDto,
   filterPredictionsByCompetition,
+  fixtureDtos,
   latestRunDto,
   topPredictionDtos,
 } from "../../../test/fixtures/predictions.js";
@@ -16,6 +17,7 @@ import { DashboardPage } from "./DashboardPage.jsx";
 vi.mock("../../../services/backendApi.js", () => ({
   backendApi: {
     getCompetitions: vi.fn(),
+    getTodayFixtures: vi.fn(),
     getLatestSystemRun: vi.fn(),
     getTodayPredictions: vi.fn(),
     getTopPredictions: vi.fn(),
@@ -27,6 +29,7 @@ describe("DashboardPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     backendApi.getCompetitions.mockResolvedValue(competitionsDto);
+    backendApi.getTodayFixtures.mockResolvedValue(fixtureDtos);
     backendApi.getLatestSystemRun.mockResolvedValue(latestRunDto);
     backendApi.getTopPredictions.mockResolvedValue(topPredictionDtos);
     backendApi.getTodayPredictions.mockImplementation(async (filters = {}) =>
@@ -48,6 +51,9 @@ describe("DashboardPage", () => {
       screen.getAllByRole("heading", { name: "Arsenal vs Chelsea" }).length,
     ).toBeGreaterThan(0);
     expect(screen.getAllByLabelText("Competición")[0]).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Ligas y competiciones" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(
         "Se muestran solo las predicciones elegibles persistidas. No hubo suficientes análisis para completar cinco posiciones.",
@@ -91,7 +97,7 @@ describe("DashboardPage", () => {
     });
   });
 
-  it("shows an enriched empty state and supports dashboard refresh", async () => {
+  it("shows an enriched empty state and keeps competition navigation visible", async () => {
     backendApi.getTodayPredictions.mockResolvedValueOnce([]);
     backendApi.getTopPredictions.mockResolvedValueOnce([]);
     const user = userEvent.setup();
@@ -126,6 +132,9 @@ describe("DashboardPage", () => {
     expect(
       within(emptyState).getByRole("button", { name: "Actualizar dashboard" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("link", { name: /Premier League/ }).length,
+    ).toBeGreaterThan(0);
     const responsiblePanel = emptyState.parentElement?.querySelector(
       ".responsible-panel--compact",
     );
