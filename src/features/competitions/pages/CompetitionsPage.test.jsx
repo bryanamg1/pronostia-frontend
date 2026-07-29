@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { backendApi } from "../../../services/backendApi.js";
@@ -30,29 +30,52 @@ describe("CompetitionsPage", () => {
   });
 
   it("renders the eleven authorized competition links in stable order", async () => {
-    renderWithRoute(<CompetitionsPage />, {
+    const view = renderWithRoute(<CompetitionsPage />, {
       path: "/competitions",
       route: "/competitions",
     });
 
-    await screen.findByRole("heading", { name: "Ligas y competiciones" });
+    await within(view.container).findAllByText("Ligas y competiciones");
 
-    const competitionLinks = screen.getAllByRole("link", {
-      name: /.+/,
-    });
-    const competitionNames = competitionLinks
-      .map((link) => link.textContent)
-      .filter((text) =>
-        competitionsDto.some((competition) => text?.includes(competition.name)),
-      );
-
-    expect(competitionNames).toEqual(
-      competitionsDto.map((competition) =>
-        expect.stringContaining(competition.name),
-      ),
-    );
     expect(
-      screen.getAllByText("Pronósticos disponibles").length,
-    ).toBeGreaterThan(0);
+      within(view.container)
+        .getAllByRole("heading", { level: 3 })
+        .map((node) => node.textContent),
+    ).toEqual(competitionsDto.map(({ name }) => name));
+    expect(
+      within(view.container).getAllByRole("link", { name: "Ver competición" }),
+    ).toHaveLength(competitionsDto.length);
+  });
+
+  it("renders a single card per competition key and keeps the call to action uniform", async () => {
+    backendApi.getCompetitions.mockResolvedValueOnce([
+      competitionsDto[0],
+      competitionsDto[1],
+      {
+        ...competitionsDto[1],
+        id: 3900,
+        season: 2025,
+      },
+    ]);
+
+    const view = renderWithRoute(<CompetitionsPage />, {
+      path: "/competitions",
+      route: "/competitions",
+    });
+
+    await within(view.container).findAllByText("Ligas y competiciones");
+
+    expect(
+      within(view.container).getAllByRole("heading", {
+        name: "Premier League",
+        level: 3,
+      }),
+    ).toHaveLength(1);
+    expect(
+      within(view.container).queryByText("Vista actual"),
+    ).not.toBeInTheDocument();
+    expect(
+      within(view.container).getAllByRole("link", { name: "Ver competición" }),
+    ).toHaveLength(2);
   });
 });

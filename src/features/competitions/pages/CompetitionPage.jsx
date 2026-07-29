@@ -25,7 +25,7 @@ export function CompetitionPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [refreshToken, setRefreshToken] = useState(0);
   const filters = readDashboardFilters(searchParams);
-  const state = useCompetitionCatalogData(refreshToken);
+  const state = useCompetitionCatalogData({ competitionKey }, refreshToken);
 
   const teamKey = filters.team;
 

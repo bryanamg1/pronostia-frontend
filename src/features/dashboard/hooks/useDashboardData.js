@@ -159,7 +159,12 @@ export function useDashboardData(filters, refreshToken = 0) {
               { signal: controller.signal },
             ),
             backendApi.getTopPredictions({ signal: controller.signal }),
-            backendApi.getTodayFixtures({ signal: controller.signal }),
+            backendApi.getTodayFixtures(
+              {
+                competition: filters.competition,
+              },
+              { signal: controller.signal },
+            ),
           ]);
 
         const predictions = predictionDtos.map((dto) =>

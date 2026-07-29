@@ -116,7 +116,9 @@ export function DashboardPage() {
 
       <CompetitionNavigationSection
         competitionCards={data.competitionCards}
-        currentCompetitionKey={filters.competition}
+        activeCompetitionKey={filters.competition}
+        activeMode="selection"
+        hideInactiveWhenActive
       />
 
       <TopPredictionsPanel predictions={data.topPredictions} />

@@ -6,8 +6,8 @@ import { HttpClientError } from "../../../services/httpClient.js";
 import { backendApi } from "../../../services/backendApi.js";
 import {
   competitionsDto,
+  filterFixturesByCompetitionAndTeam,
   filterPredictionsByCompetition,
-  fixtureDtos,
   latestRunDto,
   topPredictionDtos,
 } from "../../../test/fixtures/predictions.js";
@@ -29,7 +29,11 @@ describe("DashboardPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     backendApi.getCompetitions.mockResolvedValue(competitionsDto);
-    backendApi.getTodayFixtures.mockResolvedValue(fixtureDtos);
+    backendApi.getTodayFixtures.mockImplementation(async (filters = {}) =>
+      filterFixturesByCompetitionAndTeam({
+        competitionKey: filters.competition,
+      }),
+    );
     backendApi.getLatestSystemRun.mockResolvedValue(latestRunDto);
     backendApi.getTopPredictions.mockResolvedValue(topPredictionDtos);
     backendApi.getTodayPredictions.mockImplementation(async (filters = {}) =>
@@ -64,13 +68,17 @@ describe("DashboardPage", () => {
   it("re-queries backend filters and clears them from the UI", async () => {
     const user = userEvent.setup();
 
-    renderWithRoute(<DashboardPage />, {
+    const view = renderWithRoute(<DashboardPage />, {
       path: "/dashboard",
       route: "/dashboard",
     });
 
-    await screen.findByText("Radiografía diaria de predicciones");
-    const competitionSelect = screen.getAllByLabelText("Competición")[0];
+    await within(view.container).findByText(
+      "Radiografía diaria de predicciones",
+    );
+    const competitionSelect = within(view.container).getAllByLabelText(
+      "Competición",
+    )[0];
 
     await user.selectOptions(competitionSelect, "premier-league");
 
@@ -82,9 +90,22 @@ describe("DashboardPage", () => {
         expect.any(Object),
       );
     });
+    await waitFor(() => {
+      expect(backendApi.getTodayFixtures).toHaveBeenLastCalledWith(
+        {
+          competition: "premier-league",
+        },
+        expect.any(Object),
+      );
+    });
+    await waitFor(() => {
+      expect(
+        within(view.container).queryByRole("heading", { name: "La Liga" }),
+      ).not.toBeInTheDocument();
+    });
 
     await user.click(
-      screen.getAllByRole("button", { name: "Limpiar filtros" })[0],
+      within(view.container).getByRole("button", { name: "Limpiar filtros" }),
     );
 
     await waitFor(() => {
@@ -92,6 +113,14 @@ describe("DashboardPage", () => {
         expect.objectContaining({
           competition: "",
         }),
+        expect.any(Object),
+      );
+    });
+    await waitFor(() => {
+      expect(backendApi.getTodayFixtures).toHaveBeenLastCalledWith(
+        {
+          competition: "",
+        },
         expect.any(Object),
       );
     });
@@ -133,7 +162,7 @@ describe("DashboardPage", () => {
       within(emptyState).getByRole("button", { name: "Actualizar dashboard" }),
     ).toBeInTheDocument();
     expect(
-      screen.getAllByRole("link", { name: /Premier League/ }).length,
+      screen.getAllByRole("link", { name: "Ver competición" }).length,
     ).toBeGreaterThan(0);
     const responsiblePanel = emptyState.parentElement?.querySelector(
       ".responsible-panel--compact",

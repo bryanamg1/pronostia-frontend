@@ -8,6 +8,11 @@
   --line: rgba(24, 33, 38, 0.12);
   --accent: #0d7f6f;
   --accent-soft: #d7f1eb;
+  --color-action-primary: var(--accent);
+  --color-action-primary-hover: #0a6d60;
+  --color-action-primary-active: #08574d;
+  --color-action-primary-text: #f6fffd;
+  --color-action-focus-ring: rgba(13, 127, 111, 0.28);
   --warning: #c96a17;
   --warning-soft: #fff0df;
   --danger: #b54337;
@@ -347,16 +352,20 @@ button {
   padding: 18px;
   display: grid;
   gap: 16px;
+  min-height: 100%;
+  align-content: start;
 }
 
-.competition-link-card[aria-current="page"] {
-  border-color: rgba(13, 127, 111, 0.28);
+.competition-link-card--active {
+  border-color: rgba(13, 127, 111, 0.35);
+  box-shadow: 0 18px 45px rgba(13, 127, 111, 0.12);
 }
 
 .competition-link-card__header {
   display: flex;
   justify-content: space-between;
   gap: 16px;
+  align-items: flex-start;
 }
 
 .competition-link-card__header h3,
@@ -388,6 +397,16 @@ button {
 .fixture-card__meta dd {
   margin: 6px 0 0;
   font-weight: 600;
+}
+
+.competition-link-card__footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+}
+
+.competition-link-card__action {
+  min-width: 12rem;
 }
 
 .fixture-list {
@@ -463,15 +482,39 @@ button {
   padding: 10px 16px;
   border: 1px solid transparent;
   border-radius: 999px;
-  background: var(--accent);
-  color: white;
+  background: var(--color-action-primary);
+  color: var(--color-action-primary-text);
   text-decoration: none;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.button:hover {
+  background: var(--color-action-primary-hover);
+}
+
+.button:active {
+  background: var(--color-action-primary-active);
+}
+
+.button:focus-visible {
+  outline: 3px solid var(--color-action-focus-ring);
+  outline-offset: 3px;
 }
 
 .button--ghost {
   background: transparent;
   color: var(--ink);
   border-color: var(--line);
+}
+
+.button--ghost:hover,
+.button--ghost:active {
+  background: rgba(24, 33, 38, 0.05);
+  color: var(--ink);
 }
 
 .status-badge {

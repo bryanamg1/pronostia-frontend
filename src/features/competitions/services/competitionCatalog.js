@@ -8,20 +8,51 @@ function getCompetitionKey(competition) {
   return competition?.targetKey ?? competition?.key ?? "";
 }
 
+function getSeasonValue(competition) {
+  return Number.isInteger(competition?.season) ? competition.season : -1;
+}
+
+function pickPreferredCompetition(current, candidate) {
+  if (!current) {
+    return candidate;
+  }
+
+  if (getSeasonValue(candidate) > getSeasonValue(current)) {
+    return candidate;
+  }
+
+  return current;
+}
+
 export function orderAuthorizedCompetitions(competitions) {
-  return [...competitions]
-    .filter((competition) =>
-      competitionOrderIndex.has(getCompetitionKey(competition)),
-    )
-    .sort(
-      (left, right) =>
-        competitionOrderIndex.get(getCompetitionKey(left)) -
-        competitionOrderIndex.get(getCompetitionKey(right)),
+  const competitionsByKey = new Map();
+
+  for (const competition of competitions) {
+    const competitionKey = getCompetitionKey(competition);
+
+    if (!competitionOrderIndex.has(competitionKey)) {
+      continue;
+    }
+
+    competitionsByKey.set(
+      competitionKey,
+      pickPreferredCompetition(
+        competitionsByKey.get(competitionKey),
+        competition,
+      ),
     );
+  }
+
+  return [...competitionsByKey.values()].sort(
+    (left, right) =>
+      competitionOrderIndex.get(getCompetitionKey(left)) -
+      competitionOrderIndex.get(getCompetitionKey(right)),
+  );
 }
 
 export function buildCompetitionCards(competitions, fixtures) {
   const statsByCompetition = new Map();
+  const seasonByCompetition = new Map();
 
   for (const fixture of fixtures) {
     const competitionKey = fixture.competition.key;
@@ -34,6 +65,10 @@ export function buildCompetitionCards(competitions, fixtures) {
     current.predictionCount += fixture.prediction ? 1 : 0;
 
     statsByCompetition.set(competitionKey, current);
+
+    if (Number.isInteger(fixture.competition.season)) {
+      seasonByCompetition.set(competitionKey, fixture.competition.season);
+    }
   }
 
   return orderAuthorizedCompetitions(competitions).map((competition) => {
@@ -46,6 +81,7 @@ export function buildCompetitionCards(competitions, fixtures) {
     return {
       ...competition,
       targetKey: competitionKey,
+      season: seasonByCompetition.get(competitionKey) ?? competition.season,
       fixtureCount: stats.fixtureCount,
       predictionCount: stats.predictionCount,
     };

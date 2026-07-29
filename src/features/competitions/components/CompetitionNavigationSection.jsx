@@ -16,10 +16,33 @@ function getAvailabilityLabel(card) {
   return COMPETITION_TEXT.statusEmpty;
 }
 
+function getAvailabilityTone(card) {
+  if (card.predictionCount > 0) {
+    return "success";
+  }
+
+  if (card.fixtureCount > 0) {
+    return "accent";
+  }
+
+  return "neutral";
+}
+
 export function CompetitionNavigationSection({
   competitionCards,
-  currentCompetitionKey = "",
+  activeCompetitionKey = "",
+  activeMode = "page",
+  hideInactiveWhenActive = false,
 }) {
+  const filteredCards =
+    hideInactiveWhenActive && activeCompetitionKey
+      ? competitionCards.filter(
+          (competition) => competition.targetKey === activeCompetitionKey,
+        )
+      : competitionCards;
+  const visibleCards =
+    filteredCards.length > 0 ? filteredCards : competitionCards;
+
   return (
     <section
       className="competition-panel"
@@ -31,15 +54,19 @@ export function CompetitionNavigationSection({
         description={COMPETITION_TEXT.overviewDescription}
       />
       <div className="competition-grid">
-        {competitionCards.map((competition) => {
-          const isCurrent = competition.targetKey === currentCompetitionKey;
+        {visibleCards.map((competition) => {
+          const isActive = competition.targetKey === activeCompetitionKey;
+          const activeLabel =
+            activeMode === "selection"
+              ? COMPETITION_TEXT.selectedBadge
+              : COMPETITION_TEXT.currentBadge;
 
           return (
-            <Link
+            <article
               key={competition.targetKey}
-              to={`/competitions/${competition.targetKey}`}
-              className="competition-link-card"
-              aria-current={isCurrent ? "page" : undefined}
+              className={`competition-link-card${
+                isActive ? " competition-link-card--active" : ""
+              }`}
             >
               <div className="competition-link-card__header">
                 <div>
@@ -50,10 +77,9 @@ export function CompetitionNavigationSection({
                 </div>
                 <StatusBadge
                   label={
-                    isCurrent
-                      ? COMPETITION_TEXT.currentView
-                      : COMPETITION_TEXT.viewCompetition
+                    isActive ? activeLabel : getAvailabilityLabel(competition)
                   }
+                  tone={isActive ? "success" : getAvailabilityTone(competition)}
                 />
               </div>
               <dl className="competition-link-card__meta">
@@ -76,7 +102,18 @@ export function CompetitionNavigationSection({
                   </div>
                 ) : null}
               </dl>
-            </Link>
+              <div className="competition-link-card__footer">
+                <Link
+                  to={`/competitions/${competition.targetKey}`}
+                  className="button competition-link-card__action"
+                  aria-current={
+                    isActive && activeMode === "page" ? "page" : undefined
+                  }
+                >
+                  {COMPETITION_TEXT.viewCompetition}
+                </Link>
+              </div>
+            </article>
           );
         })}
       </div>

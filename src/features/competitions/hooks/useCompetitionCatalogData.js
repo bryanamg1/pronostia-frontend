@@ -58,7 +58,10 @@ function buildWindowLabel(fixtures) {
   return `${dates[0]} - ${dates.at(-1)}`;
 }
 
-export function useCompetitionCatalogData(refreshToken = 0) {
+export function useCompetitionCatalogData(
+  { competitionKey = "" } = {},
+  refreshToken = 0,
+) {
   const [state, setState] = useState({
     status: "loading",
     data: null,
@@ -79,7 +82,12 @@ export function useCompetitionCatalogData(refreshToken = 0) {
         const [competitionsDto, latestRun, fixturesDto] = await Promise.all([
           backendApi.getCompetitions({ signal: controller.signal }),
           backendApi.getLatestSystemRun({ signal: controller.signal }),
-          backendApi.getTodayFixtures({ signal: controller.signal }),
+          backendApi.getTodayFixtures(
+            {
+              competition: competitionKey,
+            },
+            { signal: controller.signal },
+          ),
         ]);
 
         const competitions = orderAuthorizedCompetitions(competitionsDto);
@@ -116,7 +124,7 @@ export function useCompetitionCatalogData(refreshToken = 0) {
     loadCompetitionCatalog();
 
     return () => controller.abort();
-  }, [refreshToken]);
+  }, [competitionKey, refreshToken]);
 
   return state;
 }

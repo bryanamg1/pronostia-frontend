@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -37,6 +37,12 @@ describe("CompetitionPage", () => {
     });
 
     await screen.findByRole("heading", { name: "Premier League" });
+    expect(backendApi.getTodayFixtures).toHaveBeenCalledWith(
+      {
+        competition: "premier-league",
+      },
+      expect.any(Object),
+    );
     expect(
       screen.getByRole("link", { name: "Ver pronóstico" }),
     ).toHaveAttribute("href", "/predictions/17");
@@ -80,6 +86,21 @@ describe("CompetitionPage", () => {
     expect(
       screen.getAllByRole("heading", { name: "Arsenal vs Chelsea" }).length,
     ).toBeGreaterThan(0);
+  });
+
+  it("shows a controlled empty state when the selected competition has no fixtures", async () => {
+    backendApi.getTodayFixtures.mockResolvedValueOnce([]);
+
+    const view = renderWithRoute(<CompetitionPage />, {
+      path: "/competitions/:competitionKey",
+      route: "/competitions/premier-league",
+    });
+
+    expect(
+      await within(view.container).findByText(
+        "No hay partidos para esta competición",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("shows a controlled unavailable state for unknown competitions", async () => {

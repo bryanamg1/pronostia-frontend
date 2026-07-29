@@ -18,6 +18,8 @@ export const COMPETITION_TEXT = {
   lastUpdated: "Última actualización",
   currentWindow: "Ventana diaria consultada",
   viewCompetition: "Ver competición",
+  currentBadge: "Actual",
+  selectedBadge: "Seleccionada",
   competitionUnavailableTitle: "Competición no disponible",
   competitionUnavailableDescription:
     "La competición solicitada no está habilitada o no existe en la disponibilidad pública actual.",
@@ -33,7 +35,6 @@ export const COMPETITION_TEXT = {
   historicalBadge: "Datos históricos",
   upcomingBadge: "Próximos partidos",
   unavailableDate: "Fecha no disponible",
-  currentView: "Vista actual",
   statusAvailable: "Con partidos disponibles",
   statusPredictions: "Con pronósticos disponibles",
   statusEmpty: "Sin partidos en la ventana actual",

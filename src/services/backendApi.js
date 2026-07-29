@@ -10,8 +10,11 @@ export const backendApi = {
     const response = await httpClient.get("/api/competitions", options);
     return response.data;
   },
-  async getTodayFixtures(options = {}) {
-    const response = await httpClient.get("/api/fixtures/today", options);
+  async getTodayFixtures(filters = {}, options = {}) {
+    const response = await httpClient.get("/api/fixtures/today", {
+      ...options,
+      query: filters,
+    });
     return response.data;
   },
   async getLatestSystemRun(options = {}) {

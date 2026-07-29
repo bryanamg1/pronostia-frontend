@@ -26,7 +26,7 @@ function buildCompetitionOptions(competitionCards) {
 export function CompetitionsPage() {
   const navigate = useNavigate();
   const [refreshToken, setRefreshToken] = useState(0);
-  const state = useCompetitionCatalogData(refreshToken);
+  const state = useCompetitionCatalogData({}, refreshToken);
 
   function refreshPage() {
     setRefreshToken((current) => current + 1);
