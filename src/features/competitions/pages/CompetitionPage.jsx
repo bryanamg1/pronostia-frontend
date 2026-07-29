@@ -149,9 +149,9 @@ export function CompetitionPage() {
             <h1>{selectedCompetition.name}</h1>
             <p>
               {selectedCompetition.country}
-              {selectedCompetition.season
-                ? ` | ${COMPETITION_TEXT.seasonLabel} ${selectedCompetition.season}`
-                : ""}
+              {` | ${COMPETITION_TEXT.seasonLabel} ${
+                selectedCompetition.season ?? COMPETITION_TEXT.unavailableValue
+              }`}
             </p>
           </div>
           <div className="hero-panel__meta hero-panel__meta--stack">

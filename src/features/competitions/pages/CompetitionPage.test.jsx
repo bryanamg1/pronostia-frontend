@@ -46,6 +46,7 @@ describe("CompetitionPage", () => {
     expect(
       screen.getByRole("link", { name: "Ver pronóstico" }),
     ).toHaveAttribute("href", "/predictions/17");
+    expect(screen.getByText("Inglaterra | Temporada 2026")).toBeInTheDocument();
     expect(screen.getByText("Datos históricos")).toBeInTheDocument();
     expect(
       screen.getAllByText("Pronóstico no disponible").length,
@@ -115,5 +116,22 @@ describe("CompetitionPage", () => {
         "La competición solicitada no está habilitada o no existe en la disponibilidad pública actual.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("preserves the selected competition from the route and loads only that public filter", async () => {
+    const view = renderWithRoute(<CompetitionPage />, {
+      path: "/competitions/:competitionKey",
+      route: "/competitions/premier-league?team=200",
+    });
+
+    expect(
+      await within(view.container).findAllByText("Premier League"),
+    ).not.toHaveLength(0);
+    expect(backendApi.getTodayFixtures).toHaveBeenCalledWith(
+      {
+        competition: "premier-league",
+      },
+      expect.any(Object),
+    );
   });
 });

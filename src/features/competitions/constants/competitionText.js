@@ -40,6 +40,7 @@ export const COMPETITION_TEXT = {
   statusEmpty: "Sin partidos en la ventana actual",
   resultsLabel: "Partidos encontrados",
   seasonLabel: "Temporada",
+  unavailableValue: "No disponible",
   backToDashboard: "Volver al dashboard",
   backToCompetitions: "Volver a competiciones",
   fixtureMeta: {

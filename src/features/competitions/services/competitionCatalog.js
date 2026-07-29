@@ -1,4 +1,6 @@
 import { AUTHORIZED_COMPETITION_ORDER } from "../constants/competitionOrder.js";
+import { getCompetitionPresentation } from "../constants/competitionPresentation.js";
+import { COMPETITION_TEXT } from "../constants/competitionText.js";
 
 const competitionOrderIndex = new Map(
   AUTHORIZED_COMPETITION_ORDER.map((key, index) => [key, index]),
@@ -6,6 +8,17 @@ const competitionOrderIndex = new Map(
 
 function getCompetitionKey(competition) {
   return competition?.targetKey ?? competition?.key ?? "";
+}
+
+function getCompetitionDisplayRegion(competition) {
+  const competitionKey = getCompetitionKey(competition);
+  const presentation = getCompetitionPresentation(competitionKey);
+
+  return (
+    presentation?.regionLabel ??
+    competition?.country ??
+    COMPETITION_TEXT.unavailableValue
+  );
 }
 
 function getSeasonValue(competition) {
@@ -22,6 +35,82 @@ function pickPreferredCompetition(current, candidate) {
   }
 
   return current;
+}
+
+function buildCompetitionViewModel(competition) {
+  return {
+    ...competition,
+    targetKey: getCompetitionKey(competition),
+    country: getCompetitionDisplayRegion(competition),
+  };
+}
+
+function createEmptyCompetitionStats() {
+  return {
+    fixtureCount: 0,
+    predictionCount: 0,
+    season: null,
+  };
+}
+
+function getPreferredFixtureSeason(fixtures) {
+  return fixtures.reduce((latestSeason, fixture) => {
+    if (!Number.isInteger(fixture.competition?.season)) {
+      return latestSeason;
+    }
+
+    if (latestSeason === null) {
+      return fixture.competition.season;
+    }
+
+    return Math.max(latestSeason, fixture.competition.season);
+  }, null);
+}
+
+function buildCompetitionStats(fixtures) {
+  const statsByCompetition = new Map();
+  const fixturesByCompetition = new Map();
+
+  for (const fixture of fixtures) {
+    const competitionKey = fixture.competition?.key;
+
+    if (!competitionKey) {
+      continue;
+    }
+
+    const currentFixtures = fixturesByCompetition.get(competitionKey) ?? [];
+    currentFixtures.push(fixture);
+    fixturesByCompetition.set(competitionKey, currentFixtures);
+  }
+
+  for (const [competitionKey, competitionFixtures] of fixturesByCompetition) {
+    const preferredSeason = getPreferredFixtureSeason(competitionFixtures);
+    const stats = createEmptyCompetitionStats();
+
+    stats.season = preferredSeason;
+
+    for (const fixture of competitionFixtures) {
+      if (
+        preferredSeason !== null &&
+        fixture.competition?.season !== preferredSeason
+      ) {
+        continue;
+      }
+
+      stats.fixtureCount += 1;
+      stats.predictionCount += fixture.prediction ? 1 : 0;
+    }
+
+    statsByCompetition.set(competitionKey, stats);
+  }
+
+  return statsByCompetition;
+}
+
+export function countUniqueCompetitionKeys(competitions) {
+  return new Set(
+    competitions.map((competition) => getCompetitionKey(competition)),
+  ).size;
 }
 
 export function orderAuthorizedCompetitions(competitions) {
@@ -43,45 +132,26 @@ export function orderAuthorizedCompetitions(competitions) {
     );
   }
 
-  return [...competitionsByKey.values()].sort(
-    (left, right) =>
-      competitionOrderIndex.get(getCompetitionKey(left)) -
-      competitionOrderIndex.get(getCompetitionKey(right)),
-  );
+  return [...competitionsByKey.values()]
+    .sort(
+      (left, right) =>
+        competitionOrderIndex.get(getCompetitionKey(left)) -
+        competitionOrderIndex.get(getCompetitionKey(right)),
+    )
+    .map(buildCompetitionViewModel);
 }
 
 export function buildCompetitionCards(competitions, fixtures) {
-  const statsByCompetition = new Map();
-  const seasonByCompetition = new Map();
-
-  for (const fixture of fixtures) {
-    const competitionKey = fixture.competition.key;
-    const current = statsByCompetition.get(competitionKey) ?? {
-      fixtureCount: 0,
-      predictionCount: 0,
-    };
-
-    current.fixtureCount += 1;
-    current.predictionCount += fixture.prediction ? 1 : 0;
-
-    statsByCompetition.set(competitionKey, current);
-
-    if (Number.isInteger(fixture.competition.season)) {
-      seasonByCompetition.set(competitionKey, fixture.competition.season);
-    }
-  }
+  const statsByCompetition = buildCompetitionStats(fixtures);
 
   return orderAuthorizedCompetitions(competitions).map((competition) => {
     const competitionKey = getCompetitionKey(competition);
-    const stats = statsByCompetition.get(competitionKey) ?? {
-      fixtureCount: 0,
-      predictionCount: 0,
-    };
+    const stats =
+      statsByCompetition.get(competitionKey) ?? createEmptyCompetitionStats();
 
     return {
-      ...competition,
-      targetKey: competitionKey,
-      season: seasonByCompetition.get(competitionKey) ?? competition.season,
+      ...buildCompetitionViewModel(competition),
+      season: stats.season ?? competition.season ?? null,
       fixtureCount: stats.fixtureCount,
       predictionCount: stats.predictionCount,
     };

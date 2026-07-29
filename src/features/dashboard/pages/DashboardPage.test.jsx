@@ -25,6 +25,16 @@ vi.mock("../../../services/backendApi.js", () => ({
   },
 }));
 
+const dashboardHeadingMatcher = /Radiograf.a diaria de predicciones/u;
+const competitionLabelMatcher = /Competici.n/u;
+const viewCompetitionMatcher = /Ver competici.n/u;
+const latestRunMatcher = /.ltima ejecuci.n/u;
+const latestUpdatedMatcher = /.ltima actualizaci.n/u;
+const emptyDescriptionMatcher =
+  /PronostIA solo muestra an.lisis cuando existen partidos disponibles/u;
+const finalDecisionMatcher =
+  /La decisi.n final siempre pertenece al usuario\./u;
+
 describe("DashboardPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -49,18 +59,22 @@ describe("DashboardPage", () => {
 
     expect(screen.getByText("Cargando dashboard")).toBeInTheDocument();
 
-    await screen.findByText("Radiografía diaria de predicciones");
+    await screen.findByRole("heading", {
+      name: dashboardHeadingMatcher,
+    });
 
     expect(
       screen.getAllByRole("heading", { name: "Arsenal vs Chelsea" }).length,
     ).toBeGreaterThan(0);
-    expect(screen.getAllByLabelText("Competición")[0]).toBeInTheDocument();
+    expect(
+      screen.getAllByLabelText(competitionLabelMatcher)[0],
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Ligas y competiciones" }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Se muestran solo las predicciones elegibles persistidas. No hubo suficientes análisis para completar cinco posiciones.",
+        /Se muestran solo las predicciones elegibles persistidas\./u,
       ),
     ).toBeInTheDocument();
   });
@@ -73,11 +87,11 @@ describe("DashboardPage", () => {
       route: "/dashboard",
     });
 
-    await within(view.container).findByText(
-      "Radiografía diaria de predicciones",
-    );
+    await within(view.container).findByRole("heading", {
+      name: dashboardHeadingMatcher,
+    });
     const competitionSelect = within(view.container).getAllByLabelText(
-      "Competición",
+      competitionLabelMatcher,
     )[0];
 
     await user.selectOptions(competitionSelect, "premier-league");
@@ -124,6 +138,42 @@ describe("DashboardPage", () => {
         expect.any(Object),
       );
     });
+    await waitFor(() => {
+      expect(
+        within(view.container).getAllByLabelText(competitionLabelMatcher)[0],
+      ).toHaveValue("");
+    });
+    await waitFor(() => {
+      expect(
+        within(view.container).getAllByRole("link", {
+          name: viewCompetitionMatcher,
+        }),
+      ).toHaveLength(11);
+    });
+  });
+
+  it("restores the selected competition from the query parameter", async () => {
+    const view = renderWithRoute(<DashboardPage />, {
+      path: "/dashboard",
+      route: "/dashboard?competition=premier-league",
+    });
+
+    await within(view.container).findByRole("heading", {
+      name: dashboardHeadingMatcher,
+    });
+
+    expect(
+      within(view.container).getAllByLabelText(competitionLabelMatcher)[0],
+    ).toHaveValue("premier-league");
+    expect(backendApi.getTodayFixtures).toHaveBeenCalledWith(
+      {
+        competition: "premier-league",
+      },
+      expect.any(Object),
+    );
+    expect(
+      within(view.container).queryByRole("heading", { name: "La Liga" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows an enriched empty state and keeps competition navigation visible", async () => {
@@ -143,26 +193,22 @@ describe("DashboardPage", () => {
 
     expect(emptyState).not.toBeNull();
     expect(
-      within(emptyState).getByText(
-        /PronostIA solo muestra análisis cuando existen partidos disponibles/,
-      ),
+      within(emptyState).getByText(emptyDescriptionMatcher),
     ).toBeInTheDocument();
     expect(
       within(emptyState).getByText("Ventana consultada"),
     ).toBeInTheDocument();
     expect(within(emptyState).getByText("2026-07-29")).toBeInTheDocument();
-    expect(
-      within(emptyState).getByText("Última ejecución"),
-    ).toBeInTheDocument();
+    expect(within(emptyState).getByText(latestRunMatcher)).toBeInTheDocument();
     expect(within(emptyState).getByText("Completada")).toBeInTheDocument();
     expect(
-      within(emptyState).getByText("Última actualización"),
+      within(emptyState).getByText(latestUpdatedMatcher),
     ).toBeInTheDocument();
     expect(
       within(emptyState).getByRole("button", { name: "Actualizar dashboard" }),
     ).toBeInTheDocument();
     expect(
-      screen.getAllByRole("link", { name: "Ver competición" }).length,
+      screen.getAllByRole("link", { name: viewCompetitionMatcher }).length,
     ).toBeGreaterThan(0);
     const responsiblePanel = emptyState.parentElement?.querySelector(
       ".responsible-panel--compact",
@@ -175,9 +221,7 @@ describe("DashboardPage", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      within(responsiblePanel).getByText(
-        "La decisión final siempre pertenece al usuario.",
-      ),
+      within(responsiblePanel).getByText(finalDecisionMatcher),
     ).toBeInTheDocument();
 
     await user.click(

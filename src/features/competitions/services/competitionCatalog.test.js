@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildCompetitionCards,
   buildTeamOptions,
+  countUniqueCompetitionKeys,
   filterFixtures,
   orderAuthorizedCompetitions,
 } from "./competitionCatalog.js";
@@ -27,6 +28,27 @@ const competitions = [
     targetKey: "laliga",
     name: "La Liga",
     country: "Spain",
+    season: 2026,
+  },
+  {
+    id: 141,
+    targetKey: "laliga",
+    name: "La Liga",
+    country: "Spain",
+    season: 2024,
+  },
+  {
+    id: 3,
+    targetKey: "uefa-europa-league",
+    name: "UEFA Europa League",
+    country: "World",
+    season: 2025,
+  },
+  {
+    id: 30,
+    targetKey: "uefa-europa-league",
+    name: "UEFA Europa League",
+    country: "World",
     season: 2026,
   },
 ];
@@ -91,26 +113,35 @@ describe("competitionCatalog", () => {
         id: 140,
         targetKey: "laliga",
         name: "La Liga",
-        country: "Spain",
+        country: "España",
         season: 2026,
       },
       {
         id: 40,
         targetKey: "premier-league",
         name: "Premier League",
-        country: "England",
+        country: "Inglaterra",
+        season: 2026,
+      },
+      {
+        id: 30,
+        targetKey: "uefa-europa-league",
+        name: "UEFA Europa League",
+        country: "Europa",
         season: 2026,
       },
     ]);
   });
 
-  it("builds one card per competition key and prefers the fixture season in the current window", () => {
-    expect(buildCompetitionCards(competitions, fixtures)).toEqual([
+  it("builds one card per competition key, localizes regions, and prefers the fixture season in the current window", () => {
+    const cards = buildCompetitionCards(competitions, fixtures);
+
+    expect(cards).toEqual([
       {
         id: 140,
         targetKey: "laliga",
         name: "La Liga",
-        country: "Spain",
+        country: "España",
         season: 2026,
         fixtureCount: 1,
         predictionCount: 0,
@@ -119,12 +150,54 @@ describe("competitionCatalog", () => {
         id: 40,
         targetKey: "premier-league",
         name: "Premier League",
-        country: "England",
+        country: "Inglaterra",
         season: 2025,
         fixtureCount: 2,
         predictionCount: 1,
       },
+      {
+        id: 30,
+        targetKey: "uefa-europa-league",
+        name: "UEFA Europa League",
+        country: "Europa",
+        season: 2026,
+        fixtureCount: 0,
+        predictionCount: 0,
+      },
     ]);
+    expect(countUniqueCompetitionKeys(cards)).toBe(cards.length);
+  });
+
+  it("counts only fixtures from the preferred season when a competition appears in multiple seasons", () => {
+    const cards = buildCompetitionCards(competitions, [
+      ...fixtures,
+      {
+        id: 4,
+        competition: {
+          key: "premier-league",
+          season: 2026,
+        },
+        homeTeam: {
+          key: "700",
+          name: "Brighton",
+        },
+        awayTeam: {
+          key: "800",
+          name: "Everton",
+        },
+        prediction: {
+          id: 21,
+        },
+      },
+    ]);
+
+    expect(cards.find((card) => card.targetKey === "premier-league")).toEqual(
+      expect.objectContaining({
+        season: 2026,
+        fixtureCount: 1,
+        predictionCount: 1,
+      }),
+    );
   });
 
   it("filters fixtures by team key for both home and away clubs", () => {
@@ -151,5 +224,9 @@ describe("competitionCatalog", () => {
         label: "Liverpool",
       },
     ]);
+  });
+
+  it("counts unique competition keys deterministically even with repeated seasons", () => {
+    expect(countUniqueCompetitionKeys(competitions)).toBe(3);
   });
 });

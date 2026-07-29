@@ -34,14 +34,12 @@ export function CompetitionNavigationSection({
   activeMode = "page",
   hideInactiveWhenActive = false,
 }) {
-  const filteredCards =
+  const visibleCards =
     hideInactiveWhenActive && activeCompetitionKey
       ? competitionCards.filter(
           (competition) => competition.targetKey === activeCompetitionKey,
         )
       : competitionCards;
-  const visibleCards =
-    filteredCards.length > 0 ? filteredCards : competitionCards;
 
   return (
     <section
@@ -95,12 +93,12 @@ export function CompetitionNavigationSection({
                   <dt>{COMPETITION_TEXT.fixtureMeta.status}</dt>
                   <dd>{getAvailabilityLabel(competition)}</dd>
                 </div>
-                {competition.season ? (
-                  <div>
-                    <dt>{COMPETITION_TEXT.seasonLabel}</dt>
-                    <dd>{competition.season}</dd>
-                  </div>
-                ) : null}
+                <div>
+                  <dt>{COMPETITION_TEXT.seasonLabel}</dt>
+                  <dd>
+                    {competition.season ?? COMPETITION_TEXT.unavailableValue}
+                  </dd>
+                </div>
               </dl>
               <div className="competition-link-card__footer">
                 <Link
