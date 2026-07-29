@@ -3,6 +3,7 @@ export const UI_TEXT = {
   appTagline: "Dashboard diario de análisis prepartido auditables",
   navigation: {
     dashboard: "Dashboard diario",
+    competitions: "Ligas y competiciones",
   },
   shell: {
     eyebrow: "PANEL TÉCNICO",
@@ -13,6 +14,7 @@ export const UI_TEXT = {
     retry: "Reintentar",
     refreshDashboard: "Actualizar dashboard",
     backToDashboard: "Volver al dashboard",
+    backToCompetitions: "Volver a competiciones",
   },
   responsibleUse: {
     eyebrow: "Uso responsable",

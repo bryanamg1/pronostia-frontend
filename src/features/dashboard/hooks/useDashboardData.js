@@ -4,9 +4,15 @@ import { appEnv } from "../../../app/config/env.js";
 import { UI_TEXT } from "../../../constants/uiText.js";
 import { backendApi } from "../../../services/backendApi.js";
 import { HttpClientError } from "../../../services/httpClient.js";
+import {
+  buildCompetitionCards,
+  orderAuthorizedCompetitions,
+} from "../../competitions/services/competitionCatalog.js";
+import { adaptCompetitionFixture } from "../../competitions/adapters/competitionFixtureAdapter.js";
 import { adaptPrediction } from "../../predictions/adapters/predictionAdapter.js";
 
 function buildFilterOptions(predictions, competitions) {
+  const orderedCompetitions = orderAuthorizedCompetitions(competitions);
   const allOption = {
     value: "",
     label: "Todos",
@@ -28,7 +34,7 @@ function buildFilterOptions(predictions, competitions) {
     ],
     competition: [
       allOption,
-      ...competitions.map((competition) => ({
+      ...orderedCompetitions.map((competition) => ({
         value: competition.targetKey,
         label: competition.name,
       })),
@@ -138,7 +144,7 @@ export function useDashboardData(filters, refreshToken = 0) {
       }));
 
       try {
-        const [competitions, latestRun, predictionDtos, topDtos] =
+        const [competitions, latestRun, predictionDtos, topDtos, fixtureDtos] =
           await Promise.all([
             backendApi.getCompetitions({ signal: controller.signal }),
             backendApi.getLatestSystemRun({ signal: controller.signal }),
@@ -153,6 +159,7 @@ export function useDashboardData(filters, refreshToken = 0) {
               { signal: controller.signal },
             ),
             backendApi.getTopPredictions({ signal: controller.signal }),
+            backendApi.getTodayFixtures({ signal: controller.signal }),
           ]);
 
         const predictions = predictionDtos.map((dto) =>
@@ -161,6 +168,10 @@ export function useDashboardData(filters, refreshToken = 0) {
         const topPredictions = topDtos.map((dto) =>
           adaptPrediction(dto, { timezone: appEnv.timezone }),
         );
+        const fixtures = fixtureDtos.map((dto) =>
+          adaptCompetitionFixture(dto, { timezone: appEnv.timezone }),
+        );
+        const orderedCompetitions = orderAuthorizedCompetitions(competitions);
         const visiblePredictions = filterByLocalDate(predictions, filters.date);
 
         setState({
@@ -171,10 +182,15 @@ export function useDashboardData(filters, refreshToken = 0) {
             predictions,
             visiblePredictions,
             topPredictions,
-            competitions,
+            competitions: orderedCompetitions,
+            fixtures,
+            competitionCards: buildCompetitionCards(
+              orderedCompetitions,
+              fixtures,
+            ),
             latestRun,
             summary: buildSummary(predictions, latestRun),
-            filterOptions: buildFilterOptions(predictions, competitions),
+            filterOptions: buildFilterOptions(predictions, orderedCompetitions),
           },
         });
       } catch (error) {

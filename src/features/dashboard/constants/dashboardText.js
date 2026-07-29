@@ -26,7 +26,7 @@ export const DASHBOARD_TEXT = {
   listEyebrow: "Listado completo",
   listTitle: "Todas las predicciones cargadas",
   listDescription:
-    "Los filtros operan sobre los contratos reales disponibles. El filtro de fecha se aplica localmente sobre la ventana diaria cargada.",
+    "Los filtros operan sobre los contratos reales disponibles. La fecha filtra solo la ventana ya cargada.",
   listEmptyTitle: "Sin resultados",
   filtersEyebrow: "Filtros",
   filtersTitle: "Filtros de lectura",

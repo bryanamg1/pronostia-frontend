@@ -144,6 +144,12 @@ button {
   text-decoration: none;
 }
 
+.app-shell__nav-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .app-shell__nav-link--active {
   border-color: rgba(13, 127, 111, 0.22);
   background: transparent;
@@ -172,6 +178,7 @@ button {
 
 .hero-panel,
 .filters-panel,
+.competition-panel,
 .detail-panel,
 .detail-hero,
 .info-state,
@@ -186,6 +193,7 @@ button {
 
 .hero-panel,
 .filters-panel,
+.competition-panel,
 .detail-panel,
 .info-state {
   padding: 24px;
@@ -220,6 +228,9 @@ button {
 .prediction-card__header,
 .prediction-card__footer,
 .prediction-card__badges,
+.fixture-card__header,
+.fixture-card__footer,
+.fixture-card__badges,
 .section-heading,
 .detail-columns {
   display: flex;
@@ -232,6 +243,7 @@ button {
 }
 
 .section-heading h2,
+.hero-panel h1,
 .hero-panel h2,
 .detail-panel h2,
 .detail-hero h1,
@@ -283,6 +295,10 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.filters-grid--competition {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .filters-grid label {
   display: grid;
   gap: 8px;
@@ -306,6 +322,103 @@ button {
 
 .prediction-card {
   padding: 20px;
+}
+
+.competition-grid,
+.fixture-list {
+  display: grid;
+  gap: 16px;
+}
+
+.competition-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.competition-link-card,
+.fixture-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  box-shadow: var(--shadow);
+}
+
+.competition-link-card {
+  padding: 18px;
+  display: grid;
+  gap: 16px;
+}
+
+.competition-link-card[aria-current="page"] {
+  border-color: rgba(13, 127, 111, 0.28);
+}
+
+.competition-link-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.competition-link-card__header h3,
+.fixture-card__header h3 {
+  margin: 0;
+}
+
+.competition-link-card__meta,
+.fixture-card__meta {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.competition-link-card__meta div,
+.fixture-card__meta div {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.competition-link-card__meta dt,
+.fixture-card__meta dt {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.competition-link-card__meta dd,
+.fixture-card__meta dd {
+  margin: 6px 0 0;
+  font-weight: 600;
+}
+
+.fixture-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.fixture-card {
+  padding: 20px;
+}
+
+.fixture-card__header {
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.fixture-card__footer {
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.hero-panel__meta--stack,
+.hero-panel__actions {
+  display: grid;
+  gap: 10px;
+}
+
+.hero-panel__actions {
+  margin-top: 20px;
 }
 
 .prediction-card__header {
@@ -477,7 +590,9 @@ button {
   .summary-grid,
   .filters-grid,
   .prediction-grid,
-  .detail-grid {
+  .detail-grid,
+  .competition-link-card__meta,
+  .fixture-card__meta {
     grid-template-columns: 1fr;
   }
 
@@ -486,7 +601,10 @@ button {
   .detail-hero,
   .detail-columns,
   .prediction-card__header,
-  .prediction-card__footer {
+  .prediction-card__footer,
+  .fixture-card__header,
+  .fixture-card__footer,
+  .competition-link-card__header {
     flex-direction: column;
   }
 }
@@ -498,9 +616,12 @@ button {
 
   .hero-panel,
   .filters-panel,
+  .competition-panel,
   .detail-panel,
   .responsible-panel,
   .prediction-card,
+  .fixture-card,
+  .competition-link-card,
   .detail-hero,
   .info-state {
     padding: 18px;
