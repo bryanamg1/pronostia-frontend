@@ -83,7 +83,7 @@ describe("PredictionDetailPage", () => {
 
     await screen.findByText("Sin explicacion persistida");
     expect(
-      screen.getByText(/No hay explicacion persistida/),
+      screen.getByText(/No hay explicación persistida/),
     ).toBeInTheDocument();
   });
 });

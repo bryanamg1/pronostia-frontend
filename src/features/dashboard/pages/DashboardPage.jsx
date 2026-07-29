@@ -1,10 +1,12 @@
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useSearchParams } from "react-router-dom";
 
+import { EmptyDashboardState } from "../components/EmptyDashboardState.jsx";
 import { InfoState } from "../../../components/InfoState.jsx";
 import { ResponsibleUsePanel } from "../../../components/ResponsibleUsePanel.jsx";
 import { SectionHeading } from "../../../components/SectionHeading.jsx";
 import { UI_TEXT } from "../../../constants/uiText.js";
+import { formatDateTime, formatRunStatus } from "../../../utils/formatters.js";
 import { DashboardFilters } from "../components/DashboardFilters.jsx";
 import { PredictionsSection } from "../components/PredictionsSection.jsx";
 import { SummaryCards } from "../components/SummaryCards.jsx";
@@ -25,9 +27,10 @@ function readFilters(searchParams) {
 
 export function DashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [refreshToken, setRefreshToken] = useState(0);
   const [isPending, startTransition] = useTransition();
   const filters = readFilters(searchParams);
-  const state = useDashboardData(filters);
+  const state = useDashboardData(filters, refreshToken);
 
   function updateFilter(key, value) {
     startTransition(() => {
@@ -49,6 +52,10 @@ export function DashboardPage() {
     });
   }
 
+  function refreshDashboard() {
+    setRefreshToken((current) => current + 1);
+  }
+
   if (state.status === "loading") {
     return (
       <InfoState
@@ -66,11 +73,7 @@ export function DashboardPage() {
         description={state.error}
         tone="danger"
         actions={
-          <button
-            className="button"
-            onClick={() => window.location.reload()}
-            type="button"
-          >
+          <button className="button" onClick={refreshDashboard} type="button">
             {UI_TEXT.actions.retry}
           </button>
         }
@@ -81,15 +84,27 @@ export function DashboardPage() {
   const { data } = state;
 
   if (data.predictions.length === 0) {
+    const consultedWindow = filters.date || null;
+    const latestRunStatus = data.latestRun?.status
+      ? formatRunStatus(data.latestRun.status)
+      : null;
+    const lastUpdated =
+      data.summary.lastUpdatedLabel !== "No disponible"
+        ? data.summary.lastUpdatedLabel
+        : data.latestRun?.finishedAt
+          ? formatDateTime(data.latestRun.finishedAt, data.timezone)
+          : null;
+
     return (
-      <>
-        <InfoState
-          title={DASHBOARD_TEXT.emptyDashboardTitle}
-          description={UI_TEXT.states.emptyDashboard}
-          tone="warning"
+      <div className="page-stack page-stack--empty">
+        <EmptyDashboardState
+          consultedWindow={consultedWindow}
+          latestRunStatus={latestRunStatus}
+          lastUpdated={lastUpdated}
+          onRefresh={refreshDashboard}
         />
-        <ResponsibleUsePanel />
-      </>
+        <ResponsibleUsePanel compact />
+      </div>
     );
   }
 

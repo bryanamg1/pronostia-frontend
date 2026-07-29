@@ -5,7 +5,11 @@ import { render } from "@testing-library/react";
 
 import { AppRoutes } from "./AppRoutes.jsx";
 import { backendApi } from "../services/backendApi.js";
-import { competitionsDto, latestRunDto } from "../test/fixtures/predictions.js";
+import {
+  competitionsDto,
+  latestRunDto,
+  predictionDtos,
+} from "../test/fixtures/predictions.js";
 
 vi.mock("../services/backendApi.js", () => ({
   backendApi: {
@@ -24,6 +28,7 @@ describe("AppRoutes", () => {
     backendApi.getLatestSystemRun.mockResolvedValue(latestRunDto);
     backendApi.getTodayPredictions.mockResolvedValue([]);
     backendApi.getTopPredictions.mockResolvedValue([]);
+    backendApi.getPredictionById.mockResolvedValue(predictionDtos[0]);
   });
 
   it("redirects root traffic to the dashboard", async () => {
@@ -33,7 +38,36 @@ describe("AppRoutes", () => {
       </MemoryRouter>,
     );
 
-    await screen.findByText("Sin predicciones cargadas");
+    await screen.findByText(
+      "No encontramos predicciones para la ventana actual",
+    );
+    expect(screen.getByText("PANEL TÉCNICO")).toBeInTheDocument();
+    expect(
+      screen.getByText("Dashboard diario de análisis prepartido auditables"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Dashboard diario")).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(
+      screen.queryByRole("link", { name: "Dashboard diario" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Dashboard diario" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps dashboard navigation useful outside the dashboard route", async () => {
+    render(
+      <MemoryRouter initialEntries={["/predictions/17"]}>
+        <AppRoutes />
+      </MemoryRouter>,
+    );
+
+    await screen.findByRole("heading", { name: "Arsenal vs Chelsea" });
+    expect(
+      screen.getByRole("link", { name: "Dashboard diario" }),
+    ).toBeInTheDocument();
   });
 
   it("renders a useful 404 state for unknown routes", async () => {

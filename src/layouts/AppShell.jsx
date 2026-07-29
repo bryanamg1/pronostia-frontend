@@ -1,8 +1,11 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import { UI_TEXT } from "../constants/uiText.js";
 
 export function AppShell({ children }) {
+  const location = useLocation();
+  const isDashboardRoute = location.pathname === "/dashboard";
+
   return (
     <div className="app-shell">
       <div className="app-shell__background" aria-hidden="true" />
@@ -15,14 +18,18 @@ export function AppShell({ children }) {
           <p className="app-shell__tagline">{UI_TEXT.appTagline}</p>
         </div>
         <nav aria-label="Navegacion principal">
-          <NavLink
-            className={({ isActive }) =>
-              `app-shell__nav-link${isActive ? " app-shell__nav-link--active" : ""}`
-            }
-            to="/dashboard"
-          >
-            {UI_TEXT.navigation.dashboard}
-          </NavLink>
+          {isDashboardRoute ? (
+            <span
+              aria-current="page"
+              className="app-shell__nav-link app-shell__nav-link--active"
+            >
+              {UI_TEXT.navigation.dashboard}
+            </span>
+          ) : (
+            <Link className="app-shell__nav-link" to="/dashboard">
+              {UI_TEXT.navigation.dashboard}
+            </Link>
+          )}
         </nav>
       </header>
       <main className="app-shell__main">{children}</main>

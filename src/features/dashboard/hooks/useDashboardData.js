@@ -66,6 +66,8 @@ function buildSummary(predictions, latestRun) {
     .filter(Boolean)
     .sort()
     .at(-1);
+  const fallbackUpdatedAt =
+    latestRun?.finishedAt ?? latestRun?.startedAt ?? null;
 
   return {
     totalPredictions: predictions.length,
@@ -79,13 +81,14 @@ function buildSummary(predictions, latestRun) {
         prediction.analysis.dataQuality.status !== "SUFFICIENT",
     ).length,
     latestRun,
-    lastUpdatedLabel: lastUpdated
-      ? new Intl.DateTimeFormat("es-AR", {
-          dateStyle: "medium",
-          timeStyle: "short",
-          timeZone: appEnv.timezone,
-        }).format(new Date(lastUpdated))
-      : "No disponible",
+    lastUpdatedLabel:
+      lastUpdated || fallbackUpdatedAt
+        ? new Intl.DateTimeFormat("es-AR", {
+            dateStyle: "medium",
+            timeStyle: "short",
+            timeZone: appEnv.timezone,
+          }).format(new Date(lastUpdated ?? fallbackUpdatedAt))
+        : "No disponible",
   };
 }
 
@@ -117,7 +120,7 @@ function normalizeError(error) {
   return UI_TEXT.errors.generic;
 }
 
-export function useDashboardData(filters) {
+export function useDashboardData(filters, refreshToken = 0) {
   const [state, setState] = useState({
     status: "loading",
     data: null,
@@ -197,6 +200,7 @@ export function useDashboardData(filters) {
     filters.dataQuality,
     filters.explanationSource,
     filters.date,
+    refreshToken,
   ]);
 
   return state;
