@@ -1,43 +1,92 @@
 # PronostIA Frontend
 
-Interfaz planificada de PronostIA para visualizar fixtures, pronosticos, metricas y avisos de uso responsable.
+Frontend publico de PronostIA para visualizar predicciones persistidas, explicaciones almacenadas y estados operativos sin recalcular metricas ni llamar a OpenAI desde el navegador.
 
 ## Estado
 
-`Bootstrap completado / implementacion no iniciada`
+Fase 6 en implementacion sobre React + Vite.
 
-Todavia no existe implementacion funcional del frontend. El repositorio conserva solo la base publica y las reglas minimas de gobierno del proyecto.
+## Stack
 
-## Proposito
-
-La interfaz mostrara en fases posteriores:
-
-- dashboard diario;
-- detalle de partidos y pronosticos;
-- metricas historicas;
-- vistas administrativas acotadas;
-- estados de loading, vacio, error y exito;
-- experiencia responsive.
-
-## Stack previsto
-
-- React.js
-- Vite
+- React 19
+- Vite 7
 - React Router
-- Material UI
+- Vitest + Testing Library
+- ESLint + Prettier
 - Arquitectura por features
-- Diseno responsive
 
-## Repositorios de referencia
+## Variables de entorno
 
-Backend: https://github.com/bryanamg1/pronostia-backend
+Copiar `.env.example` y completar segun el backend local:
 
-Blueprint oficial: https://github.com/bryanamg1/pronostia-backend/blob/main/blueprint-celula-hibrida.md
+- `VITE_API_BASE_URL`
+- `VITE_APP_NAME`
+- `VITE_APP_TIMEZONE`
 
-## Flujo Git
+No se usan API keys ni secretos en el frontend.
 
-- `main`: linea estable del repositorio.
-- `develop`: base obligatoria para cada nueva tarea.
-- ramas de trabajo: `bryan/<tipo>/<nombre-corto>`.
+## Scripts
 
-Cada fase requiere autorizacion explicita antes de iniciar cambios de implementacion.
+- `npm run dev`
+- `npm run build`
+- `npm run preview`
+- `npm test`
+- `npm run test:watch`
+- `npm run test:coverage`
+- `npm run lint`
+- `npm run lint:fix`
+- `npm run format`
+- `npm run format:check`
+- `npm run check`
+
+## Rutas
+
+- `/` redirige a `/dashboard`
+- `/dashboard` muestra resumen diario, Top 5, listado completo, filtros y ultima ejecucion
+- `/predictions/:predictionId` muestra detalle persistido de la prediccion
+- `*` muestra una vista 404
+
+## Arquitectura
+
+La aplicacion sigue arquitectura por features:
+
+- `src/app`: bootstrap y configuracion
+- `src/features/dashboard`: dashboard diario
+- `src/features/predictions`: detalle y adapters
+- `src/components`, `src/layouts`, `src/routes`, `src/services`, `src/utils`: piezas compartidas
+
+El frontend consume contratos publicos del backend y transforma DTOs con adapters de solo lectura.
+
+## Contratos consumidos
+
+- `GET /api/competitions`
+- `GET /api/system/runs/latest`
+- `GET /api/predictions/today`
+- `GET /api/predictions/top`
+- `GET /api/predictions/:id`
+
+Filtros enviados al backend en `/api/predictions/today`:
+
+- `competition`
+- `market`
+- `recommendation`
+- `dataQuality`
+- `explanationSource`
+
+El filtro `date` se aplica localmente sobre la ventana ya cargada.
+
+## Estados UI
+
+La interfaz implementa:
+
+- loading
+- empty
+- error
+- success
+- explicacion OpenAI
+- fallback determinista
+- ausencia de explicacion
+
+## Uso responsable
+
+PronostIA ofrece estimaciones estadisticas. No garantiza resultados, no ejecuta apuestas y no muestra lenguaje de certeza o urgencia artificial.
