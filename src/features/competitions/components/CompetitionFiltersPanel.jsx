@@ -9,6 +9,14 @@ function renderOptions(options) {
 }
 
 export function CompetitionFiltersPanel({
+  typeOptions = [],
+  selectedType = "",
+  onTypeChange = () => undefined,
+  showTypeSelect = false,
+  geographyOptions = [],
+  selectedGeography = "",
+  onGeographyChange = () => undefined,
+  showGeographySelect = false,
   competitionOptions,
   selectedCompetition,
   onCompetitionChange,
@@ -43,6 +51,28 @@ export function CompetitionFiltersPanel({
         </button>
       </div>
       <div className="filters-grid filters-grid--competition">
+        {showTypeSelect ? (
+          <label>
+            <span>{COMPETITION_TEXT.typeLabel}</span>
+            <select
+              value={selectedType}
+              onChange={(event) => onTypeChange(event.target.value)}
+            >
+              {renderOptions(typeOptions)}
+            </select>
+          </label>
+        ) : null}
+        {showGeographySelect ? (
+          <label>
+            <span>{COMPETITION_TEXT.geographyLabel}</span>
+            <select
+              value={selectedGeography}
+              onChange={(event) => onGeographyChange(event.target.value)}
+            >
+              {renderOptions(geographyOptions)}
+            </select>
+          </label>
+        ) : null}
         {showCompetitionSelect ? (
           <label>
             <span>{COMPETITION_TEXT.competitionLabel}</span>

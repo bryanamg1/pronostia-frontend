@@ -1,5 +1,7 @@
 export const DASHBOARD_FILTER_PARAMS = {
   date: "date",
+  competitionType: "competitionType",
+  competitionRegion: "competitionRegion",
   competition: "competition",
   team: "team",
   market: "market",
@@ -10,6 +12,8 @@ export const DASHBOARD_FILTER_PARAMS = {
 
 export const DASHBOARD_FILTER_DEFAULTS = {
   date: "",
+  competitionType: "",
+  competitionRegion: "",
   competition: "",
   team: "",
   market: "",

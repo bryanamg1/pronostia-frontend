@@ -30,7 +30,7 @@ describe("CompetitionPage", () => {
     backendApi.getLatestSystemRun.mockResolvedValue(latestRunDto);
   });
 
-  it("renders a valid competition with fixtures and prediction links", async () => {
+  it("renders a valid competition with fixtures, prediction links, and localized badges", async () => {
     renderWithRoute(<CompetitionPage />, {
       path: "/competitions/:competitionKey",
       route: "/competitions/premier-league",
@@ -47,7 +47,8 @@ describe("CompetitionPage", () => {
       screen.getByRole("link", { name: "Ver pronóstico" }),
     ).toHaveAttribute("href", "/predictions/17");
     expect(screen.getByText("Inglaterra | Temporada 2026")).toBeInTheDocument();
-    expect(screen.getByText("Datos históricos")).toBeInTheDocument();
+    expect(screen.getByText("Liga nacional")).toBeInTheDocument();
+    expect(screen.getByText("Disponibilidad parcial")).toBeInTheDocument();
     expect(
       screen.getAllByText("Pronóstico no disponible").length,
     ).toBeGreaterThan(0);
@@ -89,18 +90,64 @@ describe("CompetitionPage", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("shows a controlled empty state when the selected competition has no fixtures", async () => {
+  it("shows a controlled empty state for a domestic cup without fixtures and exposes provider availability", async () => {
     backendApi.getTodayFixtures.mockResolvedValueOnce([]);
 
     const view = renderWithRoute(<CompetitionPage />, {
       path: "/competitions/:competitionKey",
-      route: "/competitions/premier-league",
+      route: "/competitions/copa-del-rey",
     });
 
     expect(
       await within(view.container).findByText(
         "No hay partidos para esta competición",
       ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Copa nacional")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("Disponibilidad parcial").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("shows historical data for a cup when the persisted window only contains past fixtures", async () => {
+    backendApi.getTodayFixtures.mockResolvedValueOnce([
+      {
+        id: 990,
+        competition: {
+          id: 45,
+          key: "fa-cup",
+          name: "FA Cup",
+          country: "England",
+          season: 2025,
+        },
+        homeTeam: {
+          id: 401,
+          key: "401",
+          name: "Manchester City",
+        },
+        awayTeam: {
+          id: 402,
+          key: "402",
+          name: "Arsenal",
+        },
+        kickoffAt: "2026-07-30T18:00:00.000Z",
+        status: "FT",
+        isHistorical: true,
+        prediction: null,
+      },
+    ]);
+
+    renderWithRoute(<CompetitionPage />, {
+      path: "/competitions/:competitionKey",
+      route: "/competitions/fa-cup",
+    });
+
+    await screen.findByRole("heading", { name: "FA Cup" });
+    expect(screen.getAllByText("Datos históricos").length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("heading", {
+        name: "Manchester City vs Arsenal",
+      }),
     ).toBeInTheDocument();
   });
 
@@ -121,15 +168,15 @@ describe("CompetitionPage", () => {
   it("preserves the selected competition from the route and loads only that public filter", async () => {
     const view = renderWithRoute(<CompetitionPage />, {
       path: "/competitions/:competitionKey",
-      route: "/competitions/premier-league?team=200",
+      route: "/competitions/fa-cup?team=200",
     });
 
     expect(
-      await within(view.container).findAllByText("Premier League"),
+      await within(view.container).findAllByText("FA Cup"),
     ).not.toHaveLength(0);
     expect(backendApi.getTodayFixtures).toHaveBeenCalledWith(
       {
-        competition: "premier-league",
+        competition: "fa-cup",
       },
       expect.any(Object),
     );

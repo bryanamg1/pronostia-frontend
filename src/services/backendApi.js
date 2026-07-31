@@ -5,9 +5,24 @@ const httpClient = createHttpClient({
   baseUrl: appEnv.apiBaseUrl,
 });
 
+function isRequestOptions(value) {
+  return Boolean(
+    value &&
+    typeof value === "object" &&
+    ("signal" in value || "headers" in value || "query" in value),
+  );
+}
+
 export const backendApi = {
-  async getCompetitions(options = {}) {
-    const response = await httpClient.get("/api/competitions", options);
+  async getCompetitions(filtersOrOptions = {}, options = {}) {
+    const filters = isRequestOptions(filtersOrOptions) ? {} : filtersOrOptions;
+    const requestOptions = isRequestOptions(filtersOrOptions)
+      ? filtersOrOptions
+      : options;
+    const response = await httpClient.get("/api/competitions", {
+      ...requestOptions,
+      query: filters,
+    });
     return response.data;
   },
   async getTodayFixtures(filters = {}, options = {}) {
