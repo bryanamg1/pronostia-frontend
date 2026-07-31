@@ -43,6 +43,8 @@ No se usan API keys ni secretos en el frontend.
 
 - `/` redirige a `/dashboard`
 - `/dashboard` muestra resumen diario, Top 5, listado completo, filtros y ultima ejecucion
+- `/competitions` muestra el catalogo publico agrupado en ligas nacionales, copas nacionales y competiciones internacionales
+- `/competitions/:competitionKey` muestra el detalle persistido de una competicion autorizada
 - `/predictions/:predictionId` muestra detalle persistido de la prediccion
 - `*` muestra una vista 404
 
@@ -60,6 +62,7 @@ El frontend consume contratos publicos del backend y transforma DTOs con adapter
 ## Contratos consumidos
 
 - `GET /api/competitions`
+- `GET /api/fixtures/today`
 - `GET /api/system/runs/latest`
 - `GET /api/predictions/today`
 - `GET /api/predictions/top`
@@ -74,6 +77,9 @@ Filtros enviados al backend en `/api/predictions/today`:
 - `explanationSource`
 
 El filtro `date` se aplica localmente sobre la ventana ya cargada.
+Los filtros `competitionType` y `competitionRegion` se mantienen como query params de la navegacion publica y se resuelven localmente sobre el catalogo ya cargado.
+
+El catalogo visible se consolida en una sola tarjeta por `competitionKey`, aunque existan varias temporadas persistidas. Las siete copas nacionales agregadas en esta fase usan el mismo flujo de navegacion que las ligas y muestran su disponibilidad publica sin inventar partidos ni pronosticos.
 
 ## Estados UI
 

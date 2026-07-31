@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 
 import { InfoState } from "../../../components/InfoState.jsx";
 import { ResponsibleUsePanel } from "../../../components/ResponsibleUsePanel.jsx";
+import { StatusBadge } from "../../../components/StatusBadge.jsx";
 import { UI_TEXT } from "../../../constants/uiText.js";
 import {
   buildUpdatedSearchParams,
@@ -19,6 +20,18 @@ import {
   filterFixtures,
   findCompetitionByKey,
 } from "../services/competitionCatalog.js";
+
+function getAvailabilityTone(competition) {
+  if (competition.availabilityStatus === "PLAN_RESTRICTED") {
+    return "warning";
+  }
+
+  if (competition.availabilityStatus === "NOT_AVAILABLE") {
+    return "danger";
+  }
+
+  return "neutral";
+}
 
 export function CompetitionPage() {
   const { competitionKey = "" } = useParams();
@@ -37,16 +50,7 @@ export function CompetitionPage() {
     [competitionKey, state.data],
   );
   const teamOptions = useMemo(() => {
-    if (!state.data) {
-      return [
-        {
-          value: "",
-          label: COMPETITION_TEXT.selectCompetition,
-        },
-      ];
-    }
-
-    if (!competitionKey) {
+    if (!state.data || !competitionKey) {
       return [
         {
           value: "",
@@ -134,9 +138,13 @@ export function CompetitionPage() {
   const emptyTitle = teamKey
     ? COMPETITION_TEXT.emptyTeamTitle
     : COMPETITION_TEXT.emptyCompetitionTitle;
+  const availabilityDescription =
+    COMPETITION_TEXT.availabilityDescriptions[
+      selectedCompetition.availabilityStatus
+    ] ?? COMPETITION_TEXT.emptyCompetitionDescription;
   const emptyDescription = teamKey
     ? COMPETITION_TEXT.emptyTeamDescription
-    : COMPETITION_TEXT.emptyCompetitionDescription;
+    : `${COMPETITION_TEXT.emptyCompetitionDescription} ${availabilityDescription}`;
 
   return (
     <div className="page-stack">
@@ -167,6 +175,11 @@ export function CompetitionPage() {
           </div>
         </div>
         <div className="hero-panel__actions">
+          <StatusBadge label={selectedCompetition.typeLabel} tone="accent" />
+          <StatusBadge
+            label={selectedCompetition.availabilityLabel}
+            tone={getAvailabilityTone(selectedCompetition)}
+          />
           <Link className="button button--ghost" to="/competitions">
             {COMPETITION_TEXT.backToCompetitions}
           </Link>

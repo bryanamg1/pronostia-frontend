@@ -1,4 +1,5 @@
-import { within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { backendApi } from "../../../services/backendApi.js";
@@ -29,7 +30,7 @@ describe("CompetitionsPage", () => {
     backendApi.getLatestSystemRun.mockResolvedValue(latestRunDto);
   });
 
-  it("renders the eleven authorized competition links in stable order", async () => {
+  it("renders the eighteen authorized competition links grouped into the three public sections", async () => {
     const view = renderWithRoute(<CompetitionsPage />, {
       path: "/competitions",
       route: "/competitions",
@@ -38,73 +39,44 @@ describe("CompetitionsPage", () => {
     await within(view.container).findAllByText("Ligas y competiciones");
 
     expect(
-      within(view.container)
-        .getAllByRole("heading", { level: 3 })
-        .map((node) => node.textContent),
-    ).toEqual(competitionsDto.map(({ name }) => name));
-    expect(
-      within(view.container).getAllByRole("link", {
-        name: /Ver competici.n/u,
-      }),
-    ).toHaveLength(competitionsDto.length);
-  });
-
-  it("renders a single card per competition key and keeps the call to action uniform", async () => {
-    backendApi.getCompetitions.mockResolvedValueOnce([
-      competitionsDto[0],
-      competitionsDto[1],
-      {
-        ...competitionsDto[1],
-        id: 3900,
-        season: 2025,
-      },
-    ]);
-
-    const view = renderWithRoute(<CompetitionsPage />, {
-      path: "/competitions",
-      route: "/competitions",
-    });
-
-    await within(view.container).findAllByText("Ligas y competiciones");
-
-    expect(
-      within(view.container).getAllByRole("heading", {
-        name: "Premier League",
+      within(view.container).getByRole("heading", {
+        name: "Ligas nacionales",
         level: 3,
       }),
-    ).toHaveLength(1);
+    ).toBeInTheDocument();
     expect(
-      within(view.container).queryByText("Vista actual"),
-    ).not.toBeInTheDocument();
+      within(view.container).getByRole("heading", {
+        name: "Copas nacionales",
+        level: 3,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(view.container).getByRole("heading", {
+        name: "Competiciones internacionales",
+        level: 3,
+      }),
+    ).toBeInTheDocument();
     expect(
       within(view.container).getAllByRole("link", {
-        name: /Ver competici.n/u,
+        name: "Ver competición",
       }),
-    ).toHaveLength(2);
+    ).toHaveLength(18);
   });
 
-  it("renders Spanish geographic labels and never repeats authorized cards by season", async () => {
+  it("renders seven domestic cup cards exactly once even when duplicate seasons arrive", async () => {
     backendApi.getCompetitions.mockResolvedValueOnce([
       ...competitionsDto,
       {
-        ...competitionsDto[0],
-        id: 1400,
-        season: 2025,
-      },
-      {
-        ...competitionsDto[1],
-        id: 3900,
+        ...competitionsDto[7],
         season: 2024,
       },
       {
-        ...competitionsDto[2],
-        id: 6100,
-        season: 2025,
+        ...competitionsDto[8],
+        season: 2024,
       },
       {
-        ...competitionsDto[8],
-        id: 3000,
-        season: 2025,
+        ...competitionsDto[9],
+        season: 2024,
       },
     ]);
 
@@ -114,45 +86,176 @@ describe("CompetitionsPage", () => {
     });
 
     await within(view.container).findAllByText("Ligas y competiciones");
-    const navigationSection =
-      view.container.querySelector(".competition-panel");
-
-    expect(navigationSection).not.toBeNull();
-    expect(
-      within(navigationSection).getAllByRole("heading", {
-        name: "La Liga",
-        level: 3,
-      }),
-    ).toHaveLength(1);
-    expect(
-      within(navigationSection).getAllByRole("heading", {
-        name: "Premier League",
-        level: 3,
-      }),
-    ).toHaveLength(1);
-    expect(
-      within(navigationSection).getAllByRole("heading", {
-        name: "Ligue 1",
-        level: 3,
-      }),
-    ).toHaveLength(1);
-    expect(
-      within(navigationSection).getAllByRole("heading", {
-        name: "UEFA Europa League",
-        level: 3,
-      }),
-    ).toHaveLength(1);
-    expect(within(navigationSection).getAllByText(/Espa.a/u)).toHaveLength(1);
-    expect(within(navigationSection).getAllByText("Inglaterra")).toHaveLength(
-      1,
+    const cupsGrid = view.container.querySelector(
+      ".competition-group:nth-of-type(2) .competition-grid",
     );
+    const cupsQueries = within(cupsGrid);
+
     expect(
-      within(navigationSection).getAllByText("Europa").length,
-    ).toBeGreaterThan(0);
-    expect(
-      within(navigationSection).getAllByRole("link", {
-        name: /Ver competici.n/u,
+      cupsQueries.getAllByRole("heading", {
+        level: 3,
       }),
-    ).toHaveLength(11);
+    ).toHaveLength(7);
+    expect(
+      cupsQueries.getAllByRole("heading", {
+        name: "Copa del Rey",
+        level: 3,
+      }),
+    ).toHaveLength(1);
+    expect(
+      cupsQueries.getAllByRole("heading", {
+        name: "FA Cup",
+        level: 3,
+      }),
+    ).toHaveLength(1);
+    expect(
+      cupsQueries.getAllByRole("heading", {
+        name: "Copa Argentina",
+        level: 3,
+      }),
+    ).toHaveLength(1);
+  });
+
+  it("filters competition cards by type and geography and preserves those query params", async () => {
+    const user = userEvent.setup();
+
+    const view = renderWithRoute(<CompetitionsPage />, {
+      path: "/competitions",
+      route:
+        "/competitions?competitionType=DOMESTIC_CUP&competitionRegion=Spain",
+    });
+
+    await screen.findByDisplayValue("Copa nacional");
+    expect(
+      screen.getByRole("option", { name: "España", selected: true }),
+    ).toBeInTheDocument();
+
+    await within(view.container).findAllByText("Ligas y competiciones");
+
+    expect(
+      within(view.container.querySelector(".competition-panel")).getAllByRole(
+        "heading",
+        {
+          name: "Copa del Rey",
+          level: 3,
+        },
+      ),
+    ).toHaveLength(1);
+    expect(
+      within(view.container.querySelector(".competition-panel")).queryByRole(
+        "heading",
+        {
+          name: "FA Cup",
+          level: 3,
+        },
+      ),
+    ).not.toBeInTheDocument();
+
+    const filtersPanel = view.container.querySelector(".filters-panel");
+
+    await user.selectOptions(
+      within(filtersPanel).getByLabelText("Tipo de competición"),
+      "DOMESTIC_LEAGUE",
+    );
+
+    await screen.findByDisplayValue("Liga nacional");
+    await waitFor(() => {
+      expect(
+        within(view.container.querySelector(".competition-panel")).queryByRole(
+          "heading",
+          {
+            name: "Copa del Rey",
+            level: 3,
+          },
+        ),
+      ).not.toBeInTheDocument();
+    });
+    expect(
+      within(view.container.querySelector(".competition-panel")).getAllByRole(
+        "heading",
+        {
+          name: "LaLiga",
+          level: 3,
+        },
+      ).length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("clears incompatible competition and team query params when the selected geography changes the visible catalog", async () => {
+    const view = renderWithRoute(<CompetitionsPage />, {
+      path: "/competitions",
+      route:
+        "/competitions?competitionType=DOMESTIC_CUP&competitionRegion=Argentina&competition=fa-cup&team=200",
+    });
+
+    await screen.findByDisplayValue("Copa nacional");
+    expect(
+      screen.getByRole("option", { name: "Argentina", selected: true }),
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        within(view.container.querySelector(".filters-panel")).getByLabelText(
+          "Competición",
+        ),
+      ).toHaveValue("");
+    });
+    expect(
+      within(view.container.querySelector(".filters-panel")).getByLabelText(
+        "Equipo",
+      ),
+    ).toBeDisabled();
+    expect(
+      within(view.container.querySelector(".competition-panel")).getAllByRole(
+        "heading",
+        {
+          name: "Copa Argentina",
+          level: 3,
+        },
+      ),
+    ).toHaveLength(1);
+    expect(
+      within(view.container.querySelector(".competition-panel")).queryByRole(
+        "heading",
+        {
+          name: "FA Cup",
+          level: 3,
+        },
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it("exposes stable cup navigation links", async () => {
+    const view = renderWithRoute(<CompetitionsPage />, {
+      path: "/competitions",
+      route: "/competitions",
+    });
+
+    await within(view.container).findAllByText("Ligas y competiciones");
+    const cupContainer = view.container.querySelector(
+      ".competition-panel .competition-group:nth-of-type(2)",
+    );
+    const cupQueries = within(cupContainer);
+    const copaDelReyCard = cupQueries
+      .getByRole("heading", { name: "Copa del Rey", level: 3 })
+      .closest("article");
+    const faCupCard = cupQueries
+      .getByRole("heading", { name: "FA Cup", level: 3 })
+      .closest("article");
+    const copaArgentinaCard = cupQueries
+      .getByRole("heading", { name: "Copa Argentina", level: 3 })
+      .closest("article");
+
+    expect(
+      within(copaDelReyCard).getByRole("link", { name: "Ver competición" }),
+    ).toHaveAttribute("href", "/competitions/copa-del-rey");
+    expect(
+      within(faCupCard).getByRole("link", { name: "Ver competición" }),
+    ).toHaveAttribute("href", "/competitions/fa-cup");
+    expect(
+      within(copaArgentinaCard).getByRole("link", {
+        name: "Ver competición",
+      }),
+    ).toHaveAttribute("href", "/competitions/copa-argentina");
   });
 });

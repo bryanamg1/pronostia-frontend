@@ -5,9 +5,13 @@ export const COMPETITION_TEXT = {
     "PronostIA expone solo competiciones autorizadas y la disponibilidad diaria persistida por el backend.",
   filtersTitle: "Filtros de competición",
   filtersDescription:
-    "Selecciona una competición o filtra partidos por equipo sin recalcular datos del backend.",
+    "Navega por tipo, país o región, competición y equipo sin recalcular datos del backend.",
+  typeLabel: "Tipo de competición",
+  geographyLabel: "País o región",
   competitionLabel: "Competición",
   teamLabel: "Equipo",
+  allTypes: "Todas las categorías",
+  allGeographies: "Todos los países y regiones",
   allCompetitions: "Todas las competiciones",
   allTeams: "Todos los equipos",
   selectCompetition: "Selecciona una competición",
@@ -29,6 +33,9 @@ export const COMPETITION_TEXT = {
   emptyTeamTitle: "No hay partidos para el equipo seleccionado",
   emptyTeamDescription:
     "No encontramos partidos persistidos para el equipo filtrado dentro de la competición elegida.",
+  emptyCatalogTitle: "Sin datos disponibles",
+  emptyCatalogDescription:
+    "No encontramos competiciones para la combinación de filtros actual.",
   predictionAvailable: "Pronóstico disponible",
   predictionUnavailable: "Pronóstico no disponible",
   openPrediction: "Ver pronóstico",
@@ -38,11 +45,41 @@ export const COMPETITION_TEXT = {
   statusAvailable: "Con partidos disponibles",
   statusPredictions: "Con pronósticos disponibles",
   statusEmpty: "Sin partidos en la ventana actual",
+  statusHistoricalOnly: "Datos históricos",
   resultsLabel: "Partidos encontrados",
   seasonLabel: "Temporada",
   unavailableValue: "No disponible",
   backToDashboard: "Volver al dashboard",
   backToCompetitions: "Volver a competiciones",
+  availabilityLabel: "Disponibilidad",
+  typeLabels: {
+    DOMESTIC_LEAGUE: "Liga nacional",
+    DOMESTIC_CUP: "Copa nacional",
+    CONTINENTAL_CUP: "Competición internacional",
+  },
+  groupLabels: {
+    domesticLeagues: "Ligas nacionales",
+    domesticCups: "Copas nacionales",
+    continentalCups: "Competiciones internacionales",
+  },
+  availabilityLabels: {
+    VERIFIED: "Verificada",
+    PARTIAL: "Disponibilidad parcial",
+    PLAN_RESTRICTED: "Acceso limitado por el proveedor",
+    NOT_AVAILABLE: "Sin datos disponibles",
+    INCONCLUSIVE: "Sin datos disponibles",
+  },
+  availabilityDescriptions: {
+    VERIFIED: "La identidad y la cobertura observada son consistentes.",
+    PARTIAL:
+      "PronostIA muestra esta competición, pero la cobertura vigente del proveedor puede ser parcial.",
+    PLAN_RESTRICTED:
+      "El proveedor limita parte de la cobertura disponible para esta competición en el plan actual.",
+    NOT_AVAILABLE:
+      "No encontramos datos públicos suficientes para esta competición en la ventana actual.",
+    INCONCLUSIVE:
+      "La disponibilidad vigente de esta competición sigue siendo inconclusa.",
+  },
   fixtureMeta: {
     kickoff: "Kickoff",
     status: "Estado",
