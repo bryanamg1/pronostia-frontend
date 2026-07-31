@@ -114,7 +114,7 @@ describe("DashboardPage", () => {
     });
     await waitFor(() => {
       expect(
-        within(view.container).queryByRole("heading", { name: "La Liga" }),
+        within(view.container).queryByRole("heading", { name: "LaLiga" }),
       ).not.toBeInTheDocument();
     });
 
@@ -148,7 +148,7 @@ describe("DashboardPage", () => {
         within(view.container).getAllByRole("link", {
           name: viewCompetitionMatcher,
         }),
-      ).toHaveLength(11);
+      ).toHaveLength(18);
     });
   });
 
@@ -172,7 +172,7 @@ describe("DashboardPage", () => {
       expect.any(Object),
     );
     expect(
-      within(view.container).queryByRole("heading", { name: "La Liga" }),
+      within(view.container).queryByRole("heading", { name: "LaLiga" }),
     ).not.toBeInTheDocument();
   });
 

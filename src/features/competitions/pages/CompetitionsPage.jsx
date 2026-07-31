@@ -1,14 +1,25 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { InfoState } from "../../../components/InfoState.jsx";
 import { ResponsibleUsePanel } from "../../../components/ResponsibleUsePanel.jsx";
 import { UI_TEXT } from "../../../constants/uiText.js";
+import {
+  buildUpdatedSearchParams,
+  clearDashboardFilters,
+  readDashboardFilters,
+} from "../../../utils/dashboardFilters.js";
 import { formatRunStatus } from "../../../utils/formatters.js";
 import { CompetitionFiltersPanel } from "../components/CompetitionFiltersPanel.jsx";
 import { CompetitionNavigationSection } from "../components/CompetitionNavigationSection.jsx";
 import { COMPETITION_TEXT } from "../constants/competitionText.js";
 import { useCompetitionCatalogData } from "../hooks/useCompetitionCatalogData.js";
+import {
+  buildCompatibleCompetitionGeographyOptions,
+  buildCompetitionRequestFilters,
+  buildCompetitionTypeOptions,
+  isCompetitionGeographyCompatible,
+} from "../services/competitionCatalog.js";
 
 function buildCompetitionOptions(competitionCards) {
   return [
@@ -25,12 +36,53 @@ function buildCompetitionOptions(competitionCards) {
 
 export function CompetitionsPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [refreshToken, setRefreshToken] = useState(0);
-  const state = useCompetitionCatalogData({}, refreshToken);
+  const filters = readDashboardFilters(searchParams);
+  const competitionRequestFilters = useMemo(
+    () =>
+      buildCompetitionRequestFilters({
+        competitionType: filters.competitionType,
+        countryRegion: filters.competitionRegion,
+      }),
+    [filters.competitionRegion, filters.competitionType],
+  );
+  const state = useCompetitionCatalogData(
+    {
+      competitionFilters: competitionRequestFilters,
+    },
+    refreshToken,
+  );
+  const geographyOptions = useMemo(
+    () => buildCompatibleCompetitionGeographyOptions(filters.competitionType),
+    [filters.competitionType],
+  );
 
   function refreshPage() {
     setRefreshToken((current) => current + 1);
   }
+
+  useEffect(() => {
+    if (!filters.competition) {
+      return;
+    }
+
+    const visibleCompetitionCards = state.data?.competitionCards ?? [];
+    const isStillVisible = visibleCompetitionCards.some(
+      (competition) => competition.targetKey === filters.competition,
+    );
+
+    if (isStillVisible) {
+      return;
+    }
+
+    setSearchParams(
+      clearDashboardFilters(searchParams, ["competition", "team"]),
+      {
+        replace: true,
+      },
+    );
+  }, [filters.competition, searchParams, setSearchParams, state.data]);
 
   if (state.status === "loading") {
     return (
@@ -57,7 +109,8 @@ export function CompetitionsPage() {
   }
 
   const { data } = state;
-  const competitionOptions = buildCompetitionOptions(data.competitionCards);
+  const competitionCards = data.competitionCards;
+  const competitionOptions = buildCompetitionOptions(competitionCards);
   const latestRunStatus = data.latestRun?.status
     ? formatRunStatus(data.latestRun.status)
     : "No disponible";
@@ -85,10 +138,49 @@ export function CompetitionsPage() {
       </section>
 
       <CompetitionFiltersPanel
+        typeOptions={buildCompetitionTypeOptions()}
+        selectedType={filters.competitionType}
+        onTypeChange={(value) =>
+          setSearchParams(
+            buildUpdatedSearchParams(searchParams, {
+              competitionType: value,
+              competitionRegion: isCompetitionGeographyCompatible({
+                competitionType: value,
+                countryRegion: filters.competitionRegion,
+              })
+                ? filters.competitionRegion
+                : "",
+              competition: "",
+              team: "",
+            }),
+            { replace: true },
+          )
+        }
+        showTypeSelect
+        geographyOptions={geographyOptions}
+        selectedGeography={filters.competitionRegion}
+        onGeographyChange={(value) =>
+          setSearchParams(
+            buildUpdatedSearchParams(searchParams, {
+              competitionRegion: value,
+              competition: "",
+              team: "",
+            }),
+            { replace: true },
+          )
+        }
+        showGeographySelect
         competitionOptions={competitionOptions}
-        selectedCompetition=""
+        selectedCompetition={filters.competition}
         onCompetitionChange={(competitionKey) => {
           if (!competitionKey) {
+            setSearchParams(
+              buildUpdatedSearchParams(searchParams, {
+                competition: "",
+                team: "",
+              }),
+              { replace: true },
+            );
             return;
           }
 
@@ -102,11 +194,29 @@ export function CompetitionsPage() {
         ]}
         selectedTeam=""
         onTeamChange={() => undefined}
-        onClear={() => navigate("/competitions")}
+        onClear={() =>
+          setSearchParams(
+            clearDashboardFilters(searchParams, [
+              "competitionType",
+              "competitionRegion",
+              "competition",
+              "team",
+            ]),
+            { replace: true },
+          )
+        }
         teamDisabled
       />
 
-      <CompetitionNavigationSection competitionCards={data.competitionCards} />
+      {competitionCards.length === 0 ? (
+        <InfoState
+          title={COMPETITION_TEXT.emptyCatalogTitle}
+          description={COMPETITION_TEXT.emptyCatalogDescription}
+          tone="warning"
+        />
+      ) : (
+        <CompetitionNavigationSection competitionCards={competitionCards} />
+      )}
       <ResponsibleUsePanel compact />
     </div>
   );

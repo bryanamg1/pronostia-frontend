@@ -2,54 +2,76 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildCompetitionCards,
+  buildCompetitionGeographyOptions,
+  buildCompetitionTypeOptions,
   buildTeamOptions,
   countUniqueCompetitionKeys,
+  filterCompetitionCards,
   filterFixtures,
+  groupCompetitionCards,
   orderAuthorizedCompetitions,
 } from "./competitionCatalog.js";
 
 const competitions = [
   {
-    id: 39,
+    id: null,
+    key: "premier-league",
     targetKey: "premier-league",
     name: "Premier League",
     country: "England",
+    region: null,
+    type: "DOMESTIC_LEAGUE",
+    availabilityStatus: "PARTIAL",
     season: 2025,
+    displayOrder: 1,
   },
   {
-    id: 40,
+    id: null,
+    key: "premier-league",
     targetKey: "premier-league",
     name: "Premier League",
     country: "England",
+    region: null,
+    type: "DOMESTIC_LEAGUE",
+    availabilityStatus: "PARTIAL",
     season: 2026,
+    displayOrder: 1,
   },
   {
-    id: 140,
+    id: null,
+    key: "laliga",
     targetKey: "laliga",
-    name: "La Liga",
+    name: "LaLiga",
     country: "Spain",
+    region: null,
+    type: "DOMESTIC_LEAGUE",
+    availabilityStatus: "PARTIAL",
     season: 2026,
+    displayOrder: 0,
   },
   {
-    id: 141,
-    targetKey: "laliga",
-    name: "La Liga",
+    id: null,
+    key: "copa-del-rey",
+    targetKey: "copa-del-rey",
+    name: "Copa del Rey",
     country: "Spain",
-    season: 2024,
-  },
-  {
-    id: 3,
-    targetKey: "uefa-europa-league",
-    name: "UEFA Europa League",
-    country: "World",
+    region: null,
+    type: "DOMESTIC_CUP",
+    availabilityStatus: "PARTIAL",
     season: 2025,
+    displayOrder: 7,
   },
   {
-    id: 30,
+    id: null,
+    key: "uefa-europa-league",
     targetKey: "uefa-europa-league",
     name: "UEFA Europa League",
-    country: "World",
+    country: null,
+    region: "Europe",
+    type: "CONTINENTAL_CUP",
+    availabilityStatus: "PARTIAL",
     season: 2026,
+    displayOrder: 15,
   },
 ];
 
@@ -71,6 +93,7 @@ const fixtures = [
     prediction: {
       id: 17,
     },
+    isHistorical: false,
   },
   {
     id: 2,
@@ -87,12 +110,13 @@ const fixtures = [
       name: "Chelsea",
     },
     prediction: null,
+    isHistorical: true,
   },
   {
     id: 3,
     competition: {
-      key: "laliga",
-      season: 2026,
+      key: "copa-del-rey",
+      season: 2025,
     },
     homeTeam: {
       key: "400",
@@ -103,101 +127,158 @@ const fixtures = [
       name: "Sevilla",
     },
     prediction: null,
+    isHistorical: true,
   },
 ];
 
 describe("competitionCatalog", () => {
-  it("deduplicates authorized competitions by key and prefers the latest season", () => {
+  it("deduplicates authorized competitions by key, localizes geography, and preserves public order", () => {
     expect(orderAuthorizedCompetitions(competitions)).toEqual([
-      {
-        id: 140,
+      expect.objectContaining({
         targetKey: "laliga",
-        name: "La Liga",
+        name: "LaLiga",
         country: "España",
-        season: 2026,
-      },
-      {
-        id: 40,
+        type: "DOMESTIC_LEAGUE",
+      }),
+      expect.objectContaining({
         targetKey: "premier-league",
         name: "Premier League",
         country: "Inglaterra",
-        season: 2026,
-      },
-      {
-        id: 30,
+        type: "DOMESTIC_LEAGUE",
+      }),
+      expect.objectContaining({
+        targetKey: "copa-del-rey",
+        name: "Copa del Rey",
+        country: "España",
+        type: "DOMESTIC_CUP",
+      }),
+      expect.objectContaining({
         targetKey: "uefa-europa-league",
         name: "UEFA Europa League",
         country: "Europa",
-        season: 2026,
-      },
+        type: "CONTINENTAL_CUP",
+      }),
     ]);
   });
 
-  it("builds one card per competition key, localizes regions, and prefers the fixture season in the current window", () => {
+  it("builds one card per competition key and flags historical-only competitions", () => {
     const cards = buildCompetitionCards(competitions, fixtures);
 
     expect(cards).toEqual([
-      {
-        id: 140,
+      expect.objectContaining({
         targetKey: "laliga",
-        name: "La Liga",
-        country: "España",
-        season: 2026,
-        fixtureCount: 1,
+        fixtureCount: 0,
         predictionCount: 0,
-      },
-      {
-        id: 40,
+      }),
+      expect.objectContaining({
         targetKey: "premier-league",
-        name: "Premier League",
-        country: "Inglaterra",
         season: 2025,
         fixtureCount: 2,
         predictionCount: 1,
-      },
-      {
-        id: 30,
-        targetKey: "uefa-europa-league",
-        name: "UEFA Europa League",
-        country: "Europa",
-        season: 2026,
-        fixtureCount: 0,
+        historicalFixtureCount: 1,
+        hasHistoricalDataOnly: false,
+      }),
+      expect.objectContaining({
+        targetKey: "copa-del-rey",
+        season: 2025,
+        fixtureCount: 1,
         predictionCount: 0,
-      },
+        historicalFixtureCount: 1,
+        hasHistoricalDataOnly: true,
+      }),
+      expect.objectContaining({
+        targetKey: "uefa-europa-league",
+        fixtureCount: 0,
+      }),
     ]);
     expect(countUniqueCompetitionKeys(cards)).toBe(cards.length);
   });
 
-  it("counts only fixtures from the preferred season when a competition appears in multiple seasons", () => {
-    const cards = buildCompetitionCards(competitions, [
-      ...fixtures,
+  it("groups competition cards into the three public sections", () => {
+    const groups = groupCompetitionCards(
+      buildCompetitionCards(competitions, fixtures),
+    );
+
+    expect(groups).toEqual([
+      expect.objectContaining({
+        key: "domesticLeagues",
+        title: "Ligas nacionales",
+      }),
+      expect.objectContaining({
+        key: "domesticCups",
+        title: "Copas nacionales",
+      }),
+      expect.objectContaining({
+        key: "continentalCups",
+        title: "Competiciones internacionales",
+      }),
+    ]);
+  });
+
+  it("filters competition cards by type and country or region", () => {
+    const cards = buildCompetitionCards(competitions, fixtures);
+
+    expect(
+      filterCompetitionCards(cards, {
+        competitionType: "DOMESTIC_CUP",
+        countryRegion: "Spain",
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        targetKey: "copa-del-rey",
+      }),
+    ]);
+    expect(
+      filterCompetitionCards(cards, {
+        competitionType: "CONTINENTAL_CUP",
+        countryRegion: "Europe",
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        targetKey: "uefa-europa-league",
+      }),
+    ]);
+  });
+
+  it("builds deterministic type and geography options", () => {
+    const cards = buildCompetitionCards(competitions, fixtures);
+
+    expect(buildCompetitionTypeOptions()).toEqual([
       {
-        id: 4,
-        competition: {
-          key: "premier-league",
-          season: 2026,
-        },
-        homeTeam: {
-          key: "700",
-          name: "Brighton",
-        },
-        awayTeam: {
-          key: "800",
-          name: "Everton",
-        },
-        prediction: {
-          id: 21,
-        },
+        value: "",
+        label: "Todas las categorías",
+      },
+      {
+        value: "DOMESTIC_LEAGUE",
+        label: "Liga nacional",
+      },
+      {
+        value: "DOMESTIC_CUP",
+        label: "Copa nacional",
+      },
+      {
+        value: "CONTINENTAL_CUP",
+        label: "Competición internacional",
       },
     ]);
-
-    expect(cards.find((card) => card.targetKey === "premier-league")).toEqual(
-      expect.objectContaining({
-        season: 2026,
-        fixtureCount: 1,
-        predictionCount: 1,
-      }),
-    );
+    expect(buildCompetitionGeographyOptions(cards)).toEqual([
+      {
+        value: "",
+        label: "Todos los países y regiones",
+      },
+      {
+        value: "Spain",
+        label: "España",
+      },
+      {
+        value: "England",
+        label: "Inglaterra",
+      },
+      {
+        value: "Europe",
+        label: "Europa",
+      },
+    ]);
   });
 
   it("filters fixtures by team key for both home and away clubs", () => {
@@ -227,6 +308,6 @@ describe("competitionCatalog", () => {
   });
 
   it("counts unique competition keys deterministically even with repeated seasons", () => {
-    expect(countUniqueCompetitionKeys(competitions)).toBe(3);
+    expect(countUniqueCompetitionKeys(competitions)).toBe(4);
   });
 });
