@@ -15,9 +15,10 @@ import { CompetitionNavigationSection } from "../components/CompetitionNavigatio
 import { COMPETITION_TEXT } from "../constants/competitionText.js";
 import { useCompetitionCatalogData } from "../hooks/useCompetitionCatalogData.js";
 import {
-  buildCompetitionGeographyOptions,
+  buildCompatibleCompetitionGeographyOptions,
+  buildCompetitionRequestFilters,
   buildCompetitionTypeOptions,
-  filterCompetitionCards,
+  isCompetitionGeographyCompatible,
 } from "../services/competitionCatalog.js";
 
 function buildCompetitionOptions(competitionCards) {
@@ -38,29 +39,36 @@ export function CompetitionsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [refreshToken, setRefreshToken] = useState(0);
   const filters = readDashboardFilters(searchParams);
-  const state = useCompetitionCatalogData({}, refreshToken);
+  const competitionRequestFilters = useMemo(
+    () =>
+      buildCompetitionRequestFilters({
+        competitionType: filters.competitionType,
+        countryRegion: filters.competitionRegion,
+      }),
+    [filters.competitionRegion, filters.competitionType],
+  );
+  const state = useCompetitionCatalogData(
+    {
+      competitionFilters: competitionRequestFilters,
+    },
+    refreshToken,
+  );
+  const geographyOptions = useMemo(
+    () => buildCompatibleCompetitionGeographyOptions(filters.competitionType),
+    [filters.competitionType],
+  );
 
   function refreshPage() {
     setRefreshToken((current) => current + 1);
   }
-
-  const filteredCompetitionCards = useMemo(() => {
-    if (!state.data) {
-      return [];
-    }
-
-    return filterCompetitionCards(state.data.competitionCards, {
-      competitionType: filters.competitionType,
-      countryRegion: filters.competitionRegion,
-    });
-  }, [filters.competitionRegion, filters.competitionType, state.data]);
 
   useEffect(() => {
     if (!filters.competition) {
       return;
     }
 
-    const isStillVisible = filteredCompetitionCards.some(
+    const visibleCompetitionCards = state.data?.competitionCards ?? [];
+    const isStillVisible = visibleCompetitionCards.some(
       (competition) => competition.targetKey === filters.competition,
     );
 
@@ -74,12 +82,7 @@ export function CompetitionsPage() {
         replace: true,
       },
     );
-  }, [
-    filteredCompetitionCards,
-    filters.competition,
-    searchParams,
-    setSearchParams,
-  ]);
+  }, [filters.competition, searchParams, setSearchParams, state.data]);
 
   if (state.status === "loading") {
     return (
@@ -106,7 +109,8 @@ export function CompetitionsPage() {
   }
 
   const { data } = state;
-  const competitionOptions = buildCompetitionOptions(filteredCompetitionCards);
+  const competitionCards = data.competitionCards;
+  const competitionOptions = buildCompetitionOptions(competitionCards);
   const latestRunStatus = data.latestRun?.status
     ? formatRunStatus(data.latestRun.status)
     : "No disponible";
@@ -140,6 +144,12 @@ export function CompetitionsPage() {
           setSearchParams(
             buildUpdatedSearchParams(searchParams, {
               competitionType: value,
+              competitionRegion: isCompetitionGeographyCompatible({
+                competitionType: value,
+                countryRegion: filters.competitionRegion,
+              })
+                ? filters.competitionRegion
+                : "",
               competition: "",
               team: "",
             }),
@@ -147,9 +157,7 @@ export function CompetitionsPage() {
           )
         }
         showTypeSelect
-        geographyOptions={buildCompetitionGeographyOptions(
-          data.competitionCards,
-        )}
+        geographyOptions={geographyOptions}
         selectedGeography={filters.competitionRegion}
         onGeographyChange={(value) =>
           setSearchParams(
@@ -200,16 +208,14 @@ export function CompetitionsPage() {
         teamDisabled
       />
 
-      {filteredCompetitionCards.length === 0 ? (
+      {competitionCards.length === 0 ? (
         <InfoState
           title={COMPETITION_TEXT.emptyCatalogTitle}
           description={COMPETITION_TEXT.emptyCatalogDescription}
           tone="warning"
         />
       ) : (
-        <CompetitionNavigationSection
-          competitionCards={filteredCompetitionCards}
-        />
+        <CompetitionNavigationSection competitionCards={competitionCards} />
       )}
       <ResponsibleUsePanel compact />
     </div>

@@ -1,4 +1,5 @@
 import { AUTHORIZED_COMPETITION_ORDER } from "../constants/competitionOrder.js";
+import { COMPETITION_DEFINITIONS } from "../constants/competitionDefinition.js";
 import { getCompetitionPresentation } from "../constants/competitionPresentation.js";
 import { COMPETITION_TEXT } from "../constants/competitionText.js";
 
@@ -7,9 +8,23 @@ const competitionOrderIndex = new Map(
 );
 
 const orderedGroupKeys = ["domesticLeagues", "domesticCups", "continentalCups"];
+const countryValues = new Set(
+  COMPETITION_DEFINITIONS.map((competition) => competition.countryValue).filter(
+    Boolean,
+  ),
+);
+const regionValues = new Set(
+  COMPETITION_DEFINITIONS.map((competition) => competition.regionValue).filter(
+    Boolean,
+  ),
+);
 
 function sanitizeText(value) {
   return typeof value === "string" ? value : null;
+}
+
+function sanitizeNumber(value) {
+  return Number.isFinite(Number(value)) ? Number(value) : null;
 }
 
 function getCompetitionKey(competition) {
@@ -135,7 +150,38 @@ function createEmptyCompetitionStats() {
     fixtureCount: 0,
     predictionCount: 0,
     historicalFixtureCount: 0,
+    hasHistoricalDataOnly: false,
     season: null,
+  };
+}
+
+function readEmbeddedCompetitionStats(competition) {
+  const fixtureCount = sanitizeNumber(competition?.fixtureCount);
+  const predictionCount = sanitizeNumber(competition?.predictionCount);
+  const historicalFixtureCount = sanitizeNumber(
+    competition?.historicalFixtureCount,
+  );
+
+  if (
+    fixtureCount === null &&
+    predictionCount === null &&
+    historicalFixtureCount === null
+  ) {
+    return null;
+  }
+
+  return {
+    fixtureCount: fixtureCount ?? 0,
+    predictionCount: predictionCount ?? 0,
+    historicalFixtureCount: historicalFixtureCount ?? 0,
+    season: Number.isInteger(competition?.season) ? competition.season : null,
+    hasHistoricalDataOnly:
+      typeof competition?.hasHistoricalDataOnly === "boolean"
+        ? competition.hasHistoricalDataOnly
+        : fixtureCount !== null &&
+          historicalFixtureCount !== null &&
+          fixtureCount > 0 &&
+          fixtureCount === historicalFixtureCount,
   };
 }
 
@@ -187,6 +233,10 @@ function buildCompetitionStats(fixtures) {
       stats.predictionCount += fixture.prediction ? 1 : 0;
       stats.historicalFixtureCount += fixture.isHistorical ? 1 : 0;
     }
+
+    stats.hasHistoricalDataOnly =
+      stats.fixtureCount > 0 &&
+      stats.fixtureCount === stats.historicalFixtureCount;
 
     statsByCompetition.set(competitionKey, stats);
   }
@@ -251,8 +301,11 @@ export function buildCompetitionCards(competitions, fixtures) {
 
   return orderAuthorizedCompetitions(competitions).map((competition) => {
     const competitionKey = getCompetitionKey(competition);
+    const embeddedStats = readEmbeddedCompetitionStats(competition);
     const stats =
-      statsByCompetition.get(competitionKey) ?? createEmptyCompetitionStats();
+      embeddedStats ??
+      statsByCompetition.get(competitionKey) ??
+      createEmptyCompetitionStats();
 
     return {
       ...competition,
@@ -260,9 +313,7 @@ export function buildCompetitionCards(competitions, fixtures) {
       fixtureCount: stats.fixtureCount,
       predictionCount: stats.predictionCount,
       historicalFixtureCount: stats.historicalFixtureCount,
-      hasHistoricalDataOnly:
-        stats.fixtureCount > 0 &&
-        stats.fixtureCount === stats.historicalFixtureCount,
+      hasHistoricalDataOnly: stats.hasHistoricalDataOnly ?? false,
     };
   });
 }
@@ -344,6 +395,93 @@ export function buildCompetitionGeographyOptions(competitionCards) {
       label: labelsByValue.get(value) ?? value,
     })),
   ];
+}
+
+export function buildCompatibleCompetitionGeographyOptions(
+  competitionType = "",
+) {
+  const orderedValues = [];
+  const labelsByValue = new Map();
+
+  for (const competition of COMPETITION_DEFINITIONS) {
+    if (competitionType && competition.type !== competitionType) {
+      continue;
+    }
+
+    const value = competition.countryValue ?? competition.regionValue;
+
+    if (!value || labelsByValue.has(value)) {
+      continue;
+    }
+
+    orderedValues.push(value);
+    labelsByValue.set(value, competition.geographyLabel);
+  }
+
+  return [
+    {
+      value: "",
+      label: COMPETITION_TEXT.allGeographies,
+    },
+    ...orderedValues.map((value) => ({
+      value,
+      label: labelsByValue.get(value) ?? value,
+    })),
+  ];
+}
+
+export function splitCompetitionGeographyFilter(countryRegion = "") {
+  if (!countryRegion) {
+    return {
+      country: "",
+      region: "",
+    };
+  }
+
+  if (countryValues.has(countryRegion)) {
+    return {
+      country: countryRegion,
+      region: "",
+    };
+  }
+
+  if (regionValues.has(countryRegion)) {
+    return {
+      country: "",
+      region: countryRegion,
+    };
+  }
+
+  return {
+    country: "",
+    region: "",
+  };
+}
+
+export function buildCompetitionRequestFilters({
+  competitionType = "",
+  countryRegion = "",
+} = {}) {
+  const geographyFilters = splitCompetitionGeographyFilter(countryRegion);
+
+  return {
+    type: competitionType,
+    country: geographyFilters.country,
+    region: geographyFilters.region,
+  };
+}
+
+export function isCompetitionGeographyCompatible({
+  competitionType = "",
+  countryRegion = "",
+} = {}) {
+  if (!countryRegion) {
+    return true;
+  }
+
+  return buildCompatibleCompetitionGeographyOptions(competitionType).some(
+    (option) => option.value === countryRegion,
+  );
 }
 
 export function findCompetitionByKey(competitions, competitionKey) {

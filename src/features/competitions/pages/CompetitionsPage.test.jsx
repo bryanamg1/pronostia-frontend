@@ -22,10 +22,30 @@ vi.mock("../../../services/backendApi.js", () => ({
   },
 }));
 
+function filterCompetitionsByCatalogFilters(filters = {}) {
+  return competitionsDto.filter((competition) => {
+    if (filters.type && competition.type !== filters.type) {
+      return false;
+    }
+
+    if (filters.country && competition.country !== filters.country) {
+      return false;
+    }
+
+    if (filters.region && competition.region !== filters.region) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
 describe("CompetitionsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    backendApi.getCompetitions.mockResolvedValue(competitionsDto);
+    backendApi.getCompetitions.mockImplementation(async (filters = {}) =>
+      filterCompetitionsByCatalogFilters(filters),
+    );
     backendApi.getTodayFixtures.mockResolvedValue(fixtureDtos);
     backendApi.getLatestSystemRun.mockResolvedValue(latestRunDto);
   });
@@ -170,6 +190,15 @@ describe("CompetitionsPage", () => {
         ),
       ).not.toBeInTheDocument();
     });
+    expect(backendApi.getCompetitions).toHaveBeenLastCalledWith(
+      {
+        availabilityStatus: "",
+        type: "DOMESTIC_LEAGUE",
+        country: "Spain",
+        region: "",
+      },
+      expect.any(Object),
+    );
     expect(
       within(view.container.querySelector(".competition-panel")).getAllByRole(
         "heading",
@@ -223,6 +252,15 @@ describe("CompetitionsPage", () => {
         },
       ),
     ).not.toBeInTheDocument();
+    expect(backendApi.getCompetitions).toHaveBeenCalledWith(
+      {
+        availabilityStatus: "",
+        type: "DOMESTIC_CUP",
+        country: "Argentina",
+        region: "",
+      },
+      expect.any(Object),
+    );
   });
 
   it("exposes stable cup navigation links", async () => {

@@ -351,9 +351,10 @@ button {
 .competition-link-card {
   padding: 18px;
   display: grid;
-  gap: 16px;
+  gap: 14px;
   min-height: 100%;
   align-content: start;
+  grid-template-rows: auto auto 1fr auto;
 }
 
 .competition-link-card--active {
@@ -362,15 +363,39 @@ button {
 }
 
 .competition-link-card__header {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: flex-start;
+  display: grid;
+  gap: 12px;
+}
+
+.competition-link-card__header-copy {
+  display: grid;
+  gap: 6px;
 }
 
 .competition-link-card__header h3,
 .fixture-card__header h3 {
   margin: 0;
+  line-height: 1.25;
+}
+
+.competition-link-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.competition-group__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: baseline;
+}
+
+.competition-group__count {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .competition-link-card__meta,
@@ -397,6 +422,7 @@ button {
 .fixture-card__meta dd {
   margin: 6px 0 0;
   font-weight: 600;
+  line-height: 1.35;
 }
 
 .competition-link-card__footer {
@@ -406,6 +432,7 @@ button {
 }
 
 .competition-link-card__action {
+  width: 100%;
   min-width: 12rem;
 }
 
@@ -647,7 +674,7 @@ button {
   .prediction-card__footer,
   .fixture-card__header,
   .fixture-card__footer,
-  .competition-link-card__header {
+  .competition-group__header {
     flex-direction: column;
   }
 }

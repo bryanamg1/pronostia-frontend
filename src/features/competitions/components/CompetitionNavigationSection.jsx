@@ -5,11 +5,7 @@ import { SectionHeading } from "../../../components/SectionHeading.jsx";
 import { COMPETITION_TEXT } from "../constants/competitionText.js";
 import { groupCompetitionCards } from "../services/competitionCatalog.js";
 
-function getAvailabilityLabel(card) {
-  if (card.predictionCount > 0) {
-    return COMPETITION_TEXT.statusPredictions;
-  }
-
+function getPrimaryStateLabel(card) {
   if (card.hasHistoricalDataOnly) {
     return COMPETITION_TEXT.statusHistoricalOnly;
   }
@@ -18,31 +14,38 @@ function getAvailabilityLabel(card) {
     return COMPETITION_TEXT.statusAvailable;
   }
 
+  if (card.availabilityStatus === "PLAN_RESTRICTED") {
+    return COMPETITION_TEXT.statusAccessLimited;
+  }
+
+  if (card.availabilityStatus === "PARTIAL") {
+    return COMPETITION_TEXT.statusCoveragePartial;
+  }
+
   return COMPETITION_TEXT.statusEmpty;
 }
 
-function getAvailabilityTone(card) {
-  if (card.predictionCount > 0) {
-    return "success";
-  }
-
+function getPrimaryStateTone(card) {
   if (card.fixtureCount > 0) {
     return "accent";
   }
 
-  return "neutral";
-}
+  if (card.hasHistoricalDataOnly) {
+    return "warning";
+  }
 
-function getProviderAvailabilityTone(card) {
   if (card.availabilityStatus === "PLAN_RESTRICTED") {
     return "warning";
   }
 
-  if (card.availabilityStatus === "NOT_AVAILABLE") {
-    return "danger";
-  }
-
   return "neutral";
+}
+
+function getCoverageValue(card) {
+  return (
+    COMPETITION_TEXT.coverageValues[card.availabilityStatus] ??
+    COMPETITION_TEXT.unavailableValue
+  );
 }
 
 export function CompetitionNavigationSection({
@@ -78,15 +81,13 @@ export function CompetitionNavigationSection({
           >
             <div className="competition-group__header">
               <h3 id={`competition-group-${group.key}`}>{group.title}</h3>
-              <span>{group.items.length}</span>
+              <p className="competition-group__count">
+                {group.items.length} {COMPETITION_TEXT.competitionsCountSuffix}
+              </p>
             </div>
             <div className="competition-grid">
               {group.items.map((competition) => {
                 const isActive = competition.targetKey === activeCompetitionKey;
-                const activeLabel =
-                  activeMode === "selection"
-                    ? COMPETITION_TEXT.selectedBadge
-                    : COMPETITION_TEXT.currentBadge;
 
                 return (
                   <article
@@ -96,7 +97,7 @@ export function CompetitionNavigationSection({
                     }`}
                   >
                     <div className="competition-link-card__header">
-                      <div>
+                      <div className="competition-link-card__header-copy">
                         <p className="section-heading__eyebrow">
                           {competition.country}
                         </p>
@@ -108,37 +109,27 @@ export function CompetitionNavigationSection({
                           tone="accent"
                         />
                         <StatusBadge
-                          label={
-                            isActive
-                              ? activeLabel
-                              : getAvailabilityLabel(competition)
-                          }
+                          label={getPrimaryStateLabel(competition)}
                           tone={
                             isActive
                               ? "success"
-                              : getAvailabilityTone(competition)
+                              : getPrimaryStateTone(competition)
                           }
                         />
-                        {competition.fixtureCount === 0 ? (
-                          <StatusBadge
-                            label={competition.availabilityLabel}
-                            tone={getProviderAvailabilityTone(competition)}
-                          />
-                        ) : null}
                       </div>
                     </div>
                     <dl className="competition-link-card__meta">
                       <div>
-                        <dt>{COMPETITION_TEXT.fixturesCount}</dt>
+                        <dt>{COMPETITION_TEXT.fixturesMetricLabel}</dt>
                         <dd>{competition.fixtureCount}</dd>
                       </div>
                       <div>
-                        <dt>{COMPETITION_TEXT.predictionsCount}</dt>
+                        <dt>{COMPETITION_TEXT.predictionsMetricLabel}</dt>
                         <dd>{competition.predictionCount}</dd>
                       </div>
                       <div>
-                        <dt>{COMPETITION_TEXT.availabilityLabel}</dt>
-                        <dd>{competition.availabilityLabel}</dd>
+                        <dt>{COMPETITION_TEXT.coverageMetricLabel}</dt>
+                        <dd>{getCoverageValue(competition)}</dd>
                       </div>
                       <div>
                         <dt>{COMPETITION_TEXT.seasonLabel}</dt>
