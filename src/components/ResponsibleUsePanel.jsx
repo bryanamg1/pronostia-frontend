@@ -1,6 +1,6 @@
 import { UI_TEXT } from "../constants/uiText.js";
 
-export function ResponsibleUsePanel({ compact = false }) {
+export function ResponsibleUsePanel({ compact = false, message = null }) {
   return (
     <section
       className={`responsible-panel${compact ? " responsible-panel--compact" : ""}`}
@@ -12,11 +12,15 @@ export function ResponsibleUsePanel({ compact = false }) {
         </p>
         <h2 id="responsible-title">{UI_TEXT.responsibleUse.title}</h2>
       </div>
-      <ul className="responsible-panel__list">
-        {UI_TEXT.responsibleUse.points.map((point) => (
-          <li key={point}>{point}</li>
-        ))}
-      </ul>
+      {compact ? (
+        <p>{message ?? UI_TEXT.responsibleUse.compactMessage}</p>
+      ) : (
+        <ul className="responsible-panel__list">
+          {UI_TEXT.responsibleUse.points.map((point) => (
+            <li key={point}>{point}</li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

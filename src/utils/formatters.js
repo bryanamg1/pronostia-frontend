@@ -6,6 +6,14 @@ export function formatPercentage(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
 
+export function formatDecimal(value, digits = 2) {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return "No disponible";
+  }
+
+  return Number(value).toFixed(digits);
+}
+
 export function formatEdge(value) {
   if (typeof value !== "number" || Number.isNaN(value)) {
     return "No disponible";

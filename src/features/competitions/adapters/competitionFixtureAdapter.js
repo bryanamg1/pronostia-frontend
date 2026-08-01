@@ -60,7 +60,10 @@ export function adaptCompetitionFixture(dto, { timezone }) {
           market: sanitizeText(dto.prediction.market),
           marketLabel: getMarketLabel(dto.prediction.market),
           selection: sanitizeText(dto.prediction.selection),
-          selectionLabel: getSelectionLabel(dto.prediction.selection),
+          selectionLabel: getSelectionLabel(
+            dto.prediction.selection,
+            dto.prediction.market,
+          ),
           recommendation: sanitizeText(dto.prediction.recommendation),
           recommendationLabel: getRecommendationLabel(
             dto.prediction.recommendation,

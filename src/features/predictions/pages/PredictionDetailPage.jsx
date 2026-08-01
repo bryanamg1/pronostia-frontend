@@ -4,9 +4,13 @@ import { InfoState } from "../../../components/InfoState.jsx";
 import { ResponsibleUsePanel } from "../../../components/ResponsibleUsePanel.jsx";
 import { UI_TEXT } from "../../../constants/uiText.js";
 import { AnalysisPanel } from "../components/AnalysisPanel.jsx";
-import { ExplanationPanel } from "../components/ExplanationPanel.jsx";
+import { GoalsScenarioPanel } from "../components/GoalsScenarioPanel.jsx";
+import { MarketComparisonPanel } from "../components/MarketComparisonPanel.jsx";
 import { PredictionDetailHero } from "../components/PredictionDetailHero.jsx";
+import { PredictionSummaryPanel } from "../components/PredictionSummaryPanel.jsx";
+import { QualityConfidencePanel } from "../components/QualityConfidencePanel.jsx";
 import { SelectionOverview } from "../components/SelectionOverview.jsx";
+import { TechnicalDetailsPanel } from "../components/TechnicalDetailsPanel.jsx";
 import { PREDICTION_TEXT } from "../constants/predictionText.js";
 import { usePredictionDetail } from "../hooks/usePredictionDetail.js";
 
@@ -65,10 +69,17 @@ export function PredictionDetailPage() {
   return (
     <div className="page-stack">
       <PredictionDetailHero prediction={state.data} />
+      <PredictionSummaryPanel prediction={state.data} />
       <SelectionOverview prediction={state.data} />
       <AnalysisPanel prediction={state.data} />
-      <ExplanationPanel prediction={state.data} />
-      <ResponsibleUsePanel />
+      <GoalsScenarioPanel prediction={state.data} />
+      <MarketComparisonPanel prediction={state.data} />
+      <QualityConfidencePanel prediction={state.data} />
+      <TechnicalDetailsPanel prediction={state.data} />
+      <ResponsibleUsePanel
+        compact
+        message={state.data.explanation.responsibleUse}
+      />
     </div>
   );
 }

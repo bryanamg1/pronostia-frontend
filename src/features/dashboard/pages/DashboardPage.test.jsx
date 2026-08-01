@@ -32,8 +32,8 @@ const latestRunMatcher = /.ltima ejecuci.n/u;
 const latestUpdatedMatcher = /.ltima actualizaci.n/u;
 const emptyDescriptionMatcher =
   /PronostIA solo muestra an.lisis cuando existen partidos disponibles/u;
-const finalDecisionMatcher =
-  /La decisi.n final siempre pertenece al usuario\./u;
+const responsibleUseMatcher =
+  /PronostIA ofrece estimaciones estad.sticas prepartido\. No garantiza resultados ni constituye una apuesta segura\./u;
 
 describe("DashboardPage", () => {
   beforeEach(() => {
@@ -221,7 +221,7 @@ describe("DashboardPage", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      within(responsiblePanel).getByText(finalDecisionMatcher),
+      within(responsiblePanel).getByText(responsibleUseMatcher),
     ).toBeInTheDocument();
 
     await user.click(

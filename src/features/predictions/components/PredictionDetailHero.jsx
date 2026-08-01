@@ -1,5 +1,16 @@
 import { StatusBadge } from "../../../components/StatusBadge.jsx";
-import { PREDICTION_TEXT } from "../constants/predictionText.js";
+
+function getTone(status) {
+  if (status === "EXPLANATION_UNAVAILABLE") {
+    return "danger";
+  }
+
+  if (status === "EXPLANATION_PENDING") {
+    return "warning";
+  }
+
+  return "accent";
+}
 
 export function PredictionDetailHero({ prediction }) {
   return (
@@ -23,11 +34,8 @@ export function PredictionDetailHero({ prediction }) {
           }
         />
         <StatusBadge
-          label={
-            prediction.explanation?.statusLabel ??
-            PREDICTION_TEXT.heroFallbackExplanation
-          }
-          tone={prediction.explanation ? "accent" : "warning"}
+          label={prediction.explanation.presentationLabel}
+          tone={getTone(prediction.explanation.status)}
         />
       </div>
     </section>

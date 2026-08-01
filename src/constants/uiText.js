@@ -19,6 +19,8 @@ export const UI_TEXT = {
   responsibleUse: {
     eyebrow: "Uso responsable",
     title: "Uso responsable",
+    compactMessage:
+      "PronostIA ofrece estimaciones estadísticas prepartido. No garantiza resultados ni constituye una apuesta segura.",
     points: [
       "PronostIA ofrece estimaciones estadísticas prepartido.",
       "No existen apuestas seguras ni resultados garantizados.",
@@ -36,7 +38,8 @@ export const UI_TEXT = {
     notFound: "No encontramos la vista solicitada.",
     invalidPrediction:
       "El identificador de predicción no es válido para consultar un detalle.",
-    noExplanation: "No hay explicación persistida para esta predicción.",
+    noExplanation:
+      "No pudimos construir una explicación comprensible para esta predicción.",
     noAnalysis: "No hay análisis adicional disponible para esta predicción.",
   },
   errors: {

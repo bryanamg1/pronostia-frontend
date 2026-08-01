@@ -656,6 +656,58 @@ button {
   line-height: 1.6;
 }
 
+.detail-highlight {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1.2;
+}
+
+.detail-panel__note {
+  margin: 16px 0 0;
+}
+
+.detail-metric-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  margin-top: 20px;
+}
+
+.detail-metric-card {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.detail-metric-card span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.detail-metric-card strong {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  line-height: 1.1;
+}
+
+.detail-panel--technical summary {
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+
+.detail-panel--technical summary::-webkit-details-marker {
+  display: none;
+}
+
+.detail-panel--technical[open] summary {
+  margin-bottom: 18px;
+}
+
 @media (max-width: 980px) {
   .summary-grid,
   .filters-grid,
